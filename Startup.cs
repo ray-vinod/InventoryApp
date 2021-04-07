@@ -1,5 +1,6 @@
 using InventoryApp.Areas.Identity;
 using InventoryApp.Data;
+using InventoryApp.RefreshServices;
 using InventoryApp.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Components;
@@ -46,6 +47,8 @@ namespace InventoryApp
             //Scoped => for one user
             //Transient => per page 
             services.AddSingleton<AlertService>();
+            services.AddSingleton<IndexRefreshService>();
+
 
 
         }
