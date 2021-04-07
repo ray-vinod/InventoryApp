@@ -1,0 +1,12 @@
+﻿@implements IDisposable
+
+<div class="@($"alert-service-{Possition}")">
+    @for (int c = 0; c < AlertService.Messages.Count; c++)
+    {
+        <span class="alert-service-span alert @GetAlertClass(AlertService.Messages[c])">
+            @AlertService.Messages[c].Message
+        </span>
+    }
+</div>
+
+
