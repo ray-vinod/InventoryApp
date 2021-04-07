@@ -1,0 +1,25 @@
+﻿@page "/upload"
+@layout MainLayout
+@attribute [Authorize(Roles = "SuperAdmin")]
+
+
+
+<Title Value="File-upload"></Title>
+
+<div class="btn-group">
+    @foreach (var item in types)
+    {
+        if (Array.IndexOf(types, item) == selected)
+        {
+            <button class="btn btn-primary">@item.Name</button>
+        }
+        else
+        {
+            <button class="btn btn-secondary" @onclick="()=>selected = Array.IndexOf(types,item)">@item.Name</button>
+        }
+    }
+</div>
+<div>
+    @GetRenderFragment(types[selected])
+</div>
+
