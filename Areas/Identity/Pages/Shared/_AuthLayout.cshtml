@@ -1,0 +1,49 @@
+﻿@{
+    Layout = "~/Pages/Shared/_Layout.cshtml";
+}
+
+<div class="row">
+    <div class="col-md-8 offset-2 bg-auth-layout pb-2">
+        <div class="card login-logout-tab">
+            <div class="card-header">
+                <ul class="nav nav-tabs card-heard-tabs">
+                    <li class="nav-item col-md-6 text-center">
+                        <a href="/Identity/Account/Login" class="nav-link">Sign In</a>
+                    </li>
+                    <li class="nav-item col-md-6 text-center">
+                        <a href="/Identity/Account/Register" class="nav-link">Sing Up</a>
+                    </li>
+                </ul>
+            </div>
+            <div class="card-content">
+                <div class="row">
+                    <div class="col-md-12 ">
+                        @RenderBody()
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@section Scripts {
+    @RenderSection("Scripts", required: false)
+
+    <script>
+        $(function(){
+            var current = location.pathname;
+            $('.nav-tabs li a').each(function(){
+                var $this = $(this);
+                if(current.indexOf($this.attr('href')) !== -1){
+                  $this.addClass('active');
+                }
+            });
+
+
+        });
+
+        
+    </script>
+    
+}

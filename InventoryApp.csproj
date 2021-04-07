@@ -6,23 +6,6 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <Compile Remove="Shared\LoginDisplay.razor.cs" />
-	  <Compile Remove="Shared\MainLoginDisplay.razor.cs" />
-	  <Compile Remove="Shared\MainLoginDisplayMin.razor.cs" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <Content Remove="Shared\LoginDisplay.razor" />
-	  <Content Remove="Shared\MainLoginDisplay.razor" />
-	  <Content Remove="Shared\MainLoginDisplayMin.razor" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <None Remove="Shared\LoginDisplay.razor.css" />
-	  <None Remove="Shared\MainLoginDisplayMin.razor.css" />
-	</ItemGroup>
-
-	<ItemGroup>
 		<PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="5.0.4" />
 		<PackageReference Include="Microsoft.AspNetCore.Components.Web.Extensions" Version="5.0.0-preview9.20513.1" />
 		<PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="5.0.4" />
@@ -31,6 +14,11 @@
 		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="5.0.4" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="5.0.4" />
 		<PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="5.0.2" />
+		<PackageReference Include="System.Drawing.Common" Version="5.0.2" />
+		<PackageReference Include="MimeKit" Version="2.11.0" />
+		<PackageReference Include="MailKit" Version="2.11.1" />
+		<PackageReference Include="BlazorPro.Spinkit" Version="1.2.0" />
+
 	</ItemGroup>
 
 	<ItemGroup>

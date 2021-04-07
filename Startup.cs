@@ -1,5 +1,6 @@
 using InventoryApp.Areas.Identity;
 using InventoryApp.Data;
+using InventoryApp.Models;
 using InventoryApp.RefreshServices;
 using InventoryApp.Services;
 using Microsoft.AspNetCore.Builder;
@@ -34,8 +35,17 @@ namespace InventoryApp
             services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
 
-            services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
-                .AddEntityFrameworkStores<ApplicationDbContext>();
+            services.AddIdentity<ApplicationUser, ApplicationRole>(options =>
+            {
+                options.SignIn.RequireConfirmedAccount = true;
+                options.Password.RequireDigit = false;
+                options.Password.RequiredLength = 5;
+                options.Password.RequireNonAlphanumeric = false;
+                options.Password.RequireUppercase = false;
+            })
+             .AddDefaultTokenProviders()
+             .AddEntityFrameworkStores<ApplicationDbContext>()
+             .AddDefaultUI();
 
             services.AddRazorPages();
             services.AddServerSideBlazor();
@@ -48,6 +58,12 @@ namespace InventoryApp
             //Transient => per page 
             services.AddSingleton<AlertService>();
             services.AddSingleton<IndexRefreshService>();
+
+            services.Configure<MailSettings>(Configuration.GetSection("MailSettings"));
+            services.AddTransient<IMailService, MailService>(); //send email for any one and with attachment
+
+
+            services.AddScoped<UserStateService>(); //Update User information who have logged in.
 
 
 
