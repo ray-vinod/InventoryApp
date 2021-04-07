@@ -1,16 +1,21 @@
 ﻿@page "/"
 
-<h1>Hello, world!</h1>
+<Title Value="Inventory App"></Title>
 
-Welcome to your new app.
-
-@code
+@if (items.Count > 0)
 {
-    [Inject]
-    public AlertService AlertService { get; set; }
-
-    protected override void OnInitialized()
-    {
-        AlertService.AddMessage(new Alert("Its works!",AlertType.Success));
-    }
+    <Carousel Items="items" Start="true" />
 }
+else
+{
+    <div class="display-3 text-center" style="height:360px;width:100%;">
+        <p>No image for image slider</p>
+    </div>
+}
+
+<div class="text-center mt-5 mb-5">
+    <h3>CIWEC HOPITAL Pvt. Ltd.</h3>
+    <p>THE ONE OF THE BEST HEALTH CENTER FOR TRAVLER IN NEPAL</p>
+    <p>WE ARE PROVIDING CERVICES FROM MAJOR CITY OF NEPAL KATHMANDU & POKHARA</p>
+</div>
+

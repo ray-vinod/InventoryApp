@@ -1,0 +1,29 @@
+﻿
+<div class="d-flex flex-column border-primary alert alert-info zero-m-p">
+    <div class="d-flex justify-content-center align-items-center overflow-hidden zero-m-p" style="height:360px;width:100%;">
+        <img src="/Images/arrow.png" @onclick="()=> Manually(true)" class="icon-container arrow-icon-left arrow-size" style="transform:rotate(180deg)" />
+        <div class="ml-2 mr-2">
+            <img src="@Items[Math.Abs(currentPossition % Items.Count)].Source" 
+                alt="@Items[Math.Abs(currentPossition % Items.Count)].Caption" width="1100" height="302" />
+            <p class="text-center text-secondary mt-3">
+                @Items[Math.Abs(currentPossition % Items.Count)].Caption
+            </p>
+        </div>
+        <img src="/Images/arrow.png" @onclick="()=> Manually(false)"class="icon-container arrow-icon-right arrow-size" />
+    </div>
+    @*Indicator on carousel*@
+    <div class="d-flex justify-content-center">
+        @foreach (var item in Items)
+        {
+            if (Math.Abs(currentPossition % Items.Count) == Items.IndexOf(item))
+            {
+                <div class="alert alert-danger border-dark mb-1 mr-1"></div>
+            }
+            else
+            {
+                <div class="alert alert-info border-dark mb-1 mr-1"></div>
+            }
+        }
+    </div>
+</div>
+

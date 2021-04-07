@@ -1,19 +1,26 @@
 ﻿@inherits LayoutComponentBase
 
+<ToastNotification Possition="bottom" />
+<div class="top-row bg-dark">
+    <div class="px-3 pl-4 pt-2">
+        <a class="navbar-brand text-white">CIWEC OT</a>
+    </div>
+    <a class="nav-link text-light mr-auto" href="/" asp-area="">
+        <span class="oi oi-home" style="font-size:20px;"></span>
+    </a>
+    
+    <MainLoginDisplay />
+</div>
+
 <div class="page">
     <div class="sidebar">
         <NavMenu />
     </div>
 
     <div class="main">
-        <div class="top-row px-4 auth">
-            <LoginDisplay />
-            <a href="https://docs.microsoft.com/aspnet/" target="_blank">About</a>
-        </div>
-
         <div class="content px-4">
-            <ToastNotification />
             @Body
         </div>
     </div>
+
 </div>

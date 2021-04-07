@@ -1,0 +1,13 @@
+﻿@page "/admin"
+
+<Title Value="Admin"></Title>
+@if (auth)
+{
+    <h3 class="text-center text-warning">
+        Your are not logged in, so redicting to login page. Thank You.
+    </h3>
+    <div class="p-4">
+        <Wave Center="true" Color="#17a2b8" />
+    </div>
+}
+
