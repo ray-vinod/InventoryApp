@@ -40,15 +40,12 @@ namespace InventoryApp
             services.AddServerSideBlazor();
             services.AddScoped<AuthenticationStateProvider, RevalidatingIdentityAuthenticationStateProvider<IdentityUser>>();
             services.AddDatabaseDeveloperPageExceptionFilter();
-            services.AddSingleton<WeatherForecastService>();
-
 
             //App services
             //Singleton => For all user
             //Scoped => for one user
             //Transient => per page 
             services.AddSingleton<AlertService>();
-
 
 
         }
