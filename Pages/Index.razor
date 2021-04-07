@@ -4,4 +4,13 @@
 
 Welcome to your new app.
 
-<SurveyPrompt Title="How is Blazor working for you?" />
+@code
+{
+    [Inject]
+    public AlertService AlertService { get; set; }
+
+    protected override void OnInitialized()
+    {
+        AlertService.AddMessage(new Alert("Its works!",AlertType.Success));
+    }
+}

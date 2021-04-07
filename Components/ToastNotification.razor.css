@@ -1,0 +1,77 @@
+﻿/*---Alert Css --*/
+.alert-service-top {
+    position: absolute;
+    top: 3.2rem;
+    right: .1rem;
+    z-index: 1;
+}
+
+.alert-service-span {
+    display: block;
+    max-width: 450px;
+    line-height: 1.6rem;
+    text-align: right;
+    padding: 0.4rem;
+    margin: 0.4rem;
+}
+
+
+.alert-service-bottom {
+    position: absolute;
+    bottom: 1.5rem;
+    right: .1rem;
+    z-index: 1;
+}
+
+.alert {
+    color: #fff;
+    border-style: solid;
+    border-width: 0 1px 4px 1px;
+    font-size: 1.4rem;
+}
+
+.alert-primary {
+    background-color: #158cba;
+    border-color: #127ba3;
+}
+
+.alert-info {
+    background-color: #9bbef6;
+    border-color: #1b5185;
+}
+
+.alert-success {
+    background-color: #8aeb8c;
+    border-color: #4a9f10;
+}
+
+.alert-warning {
+    background-color: #f2de3d;
+    border-color: #aea106;
+}
+
+.alert-error {
+    background-color: #ef7979;
+    border-color: #b90d0d;
+}
+
+@keyframes fadein {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes fadeout {
+    from {
+        opacity: 1;
+    }
+
+    to {
+        opacity: 0;
+    }
+}
+/*---Alert Css end--*/
