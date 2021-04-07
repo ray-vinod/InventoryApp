@@ -1,0 +1,25 @@
+﻿@layout MainLayout
+@attribute [Authorize(Roles = "SuperAdmin")]
+
+<h3 class="text-center">File on the server</h3>
+<div class="d-flex flex-row justify-content-around">
+    <table class="table">
+        <tr>
+            @foreach (var file in files)
+            {
+                string[] attr = file.Split("\\");
+                string src = string.Format("/Images/CarouselImages/" + attr.LastOrDefault());
+                <td>
+                    <img src="@src" width="100" height="100" /><br />
+                    @attr.LastOrDefault() <br />
+                    <a @onclick="()=>Delete(file)" class="btn btn-outline-danger mt-2">
+                        <span class="oi oi-trash ml-2"></span>Delete
+                    </a>
+                </td>
+            }
+        </tr>
+    </table>
+</div>
+
+
+

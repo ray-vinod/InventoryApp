@@ -1,37 +1,161 @@
-﻿<div class="top-row pl-4 navbar navbar-dark">
-    <a class="navbar-brand" href="">InventoryApp</a>
-    <button class="navbar-toggler" @onclick="ToggleNavMenu">
+﻿
+<div class="top-row px-3 pl-4 navbar navbar-dark bg-dark menu-toggler-icon">
+    <a class="navbar-brand text-white">CIWEC OT</a>
+    <button class="navbar-toggler" @onclick="()=> ToggleNavMenu()">
         <span class="navbar-toggler-icon"></span>
     </button>
 </div>
 
-<div class="@NavMenuCssClass" @onclick="ToggleNavMenu">
+<div class="@NavMenuCssClass" @onclick="()=>ToggleNavMenu()">
     <ul class="nav flex-column">
         <li class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="oi oi-home" aria-hidden="true"></span> Home
+            <NavLink class="nav-link text-light" href="/dashboard" Match="NavLinkMatch.All">
+                <span class="oi oi-dashboard hide-icon" aria-hidden="true" style="font-size:24px"></span>Dashboard
             </NavLink>
         </li>
         <li class="nav-item px-3">
-            <NavLink class="nav-link" href="counter">
-                <span class="oi oi-plus" aria-hidden="true"></span> Counter
+            <NavLink class="nav-link" href="prefix/index" @onclick="()=>SetFalse()">
+                <span class="oi oi-loop-square" aria-hidden="true"></span> Prefix
             </NavLink>
         </li>
         <li class="nav-item px-3">
-            <NavLink class="nav-link" href="fetchdata">
-                <span class="oi oi-list-rich" aria-hidden="true"></span> Fetch data
+            <NavLink class="nav-link" href="suffix/index" @onclick="()=>SetFalse()">
+                <span class="oi oi-fire" aria-hidden="true"></span> Suffix
             </NavLink>
         </li>
+        <li class="nav-item px-3">
+            <NavLink class="nav-link" @onclick="@(() => ToggleSubMenu("product"))">
+                <span class="oi oi-menu" aria-hidden="true"></span> Product
+            </NavLink>
+            @if (subMenu.First(x => x.Name == "product").Status)
+            {
+                <ul class="nav flex-column">
+                    <li class="nav-item px-3">
+                        <NavLink class="nav-link" href="product/create">
+                            <span class="oi oi-plus" aria-hidden="true"></span>New
+                        </NavLink>
+                    </li>
+                    <li class="nav-item px-3">
+                        <NavLink class="nav-link" href="product/index">
+                            <span class="oi oi-list" aria-hidden="true"></span>All
+                        </NavLink>
+                    </li>
+                </ul>
+            }
+        </li>
+        <li class="nav-item px-3">
+            <NavLink class="nav-link" @onclick="@(() => ToggleSubMenu("receive"))">
+                <span class="oi oi-basket" aria-hidden="true"></span> Receive
+            </NavLink>
+            @if (subMenu.First(x => x.Name == "receive").Status)
+            {
+                <ul class="nav flex-column">
+                    <li class="nav-item px-3">
+                        <NavLink class="nav-link" href="receive/create">
+                            <span class="oi oi-plus" aria-hidden="true"></span>New
+                        </NavLink>
+                    </li>
+                    <li class="nav-item px-3">
+                        <NavLink class="nav-link" href="receive/index">
+                            <span class="oi oi-list" aria-hidden="true"></span>All
+                        </NavLink>
+                    </li>
+                    <li class="nav-item px-3">
+                        <NavLink class="nav-link" href="return/receive">
+                            <span class="oi oi-list" aria-hidden="true"></span>Returns
+                        </NavLink>
+                    </li>
+                </ul>
+            }
+        </li>
+        <li class="nav-item px-3">
+            <NavLink class="nav-link" @onclick="@(() => ToggleSubMenu("issue"))">
+                <span class="oi oi-task" aria-hidden="true"></span> Issue
+            </NavLink>
+            @if (subMenu.First(x => x.Name == "issue").Status)
+            {
+                <ul class="nav flex-column">
+                    <li class="nav-item px-3">
+                        <NavLink class="nav-link" href="issue/create">
+                            <span class="oi oi-plus" aria-hidden="true"></span>New
+                        </NavLink>
+                    </li>
+                    <li class="nav-item px-3">
+                        <NavLink class="nav-link" href="issue/index">
+                            <span class="oi oi-list" aria-hidden="true"></span>All
+                        </NavLink>
+                    </li>
+                    <li class="nav-item px-3">
+                        <NavLink class="nav-link" href="issue/return">
+                            <span class="oi oi-list" aria-hidden="true"></span>Returns
+                        </NavLink>
+                    </li>
+                </ul>
+            }
+        </li>
+        <li class="nav-item px-3">
+            <NavLink class="nav-link" href="stock/index" @onclick="()=>SetFalse()">
+                <span class="oi oi-graph" aria-hidden="true"></span> Stock
+            </NavLink>
+        </li>
+        <AuthorizeView Roles="SuperAdmin">
+            <Authorized>
+                <li class="nav-item px-3">
+                    <NavLink class="nav-link" @onclick="@(() => ToggleSubMenu("task"))">
+                        <span class="oi oi-wrench" aria-hidden="true"></span> Task
+                    </NavLink>
+                    @if (subMenu.First(x => x.Name == "task").Status)
+                {
+                    <ul class="nav flex-column">
+                        <li class="nav-item px-3">
+                            <NavLink class="nav-link" href="receive/cancel">
+                                <span class="oi oi-loop-circular" aria-hidden="true"></span>Receive
+                            </NavLink>
+                        </li>
+                        <li class="nav-item px-3">
+                            <NavLink class="nav-link" href="issue/cancel">
+                                <span class="oi oi-loop-circular" aria-hidden="true"></span>Issue
+                            </NavLink>
+                        </li>
+                        <li class="nav-item px-3">
+                            <NavLink class="nav-link" href="/report">
+                                <span class="oi oi-list-rich" aria-hidden="true"></span>Reports
+                            </NavLink>
+                        </li>
+                        <li class="nav-item px-3">
+                            <NavLink class="nav-link" href="/upload">
+                                <span class="oi oi-list-rich" aria-hidden="true"></span>Carousel File
+                            </NavLink>
+                        </li>
+                        <li class="nav-item px-3">
+                            <NavLink class="nav-link" href="/role/index">
+                                <span class="oi oi-list-rich" aria-hidden="true"></span>Role
+                            </NavLink>
+                        </li>
+                        <li class="nav-item px-3">
+                            <NavLink class="nav-link" href="/role/manage">
+                                <span class="oi oi-list-rich" aria-hidden="true"></span>Manage Role
+                            </NavLink>
+                        </li>
+                    </ul>
+                    }
+                </li>
+            </Authorized>
+        </AuthorizeView>
+
+        <li class="nav-item px-3">
+            <NavLink class="nav-link" href="email" @onclick="()=>SetFalse()">
+                <span class="oi oi-envelope-closed" aria-hidden="true"></span> Send Mail
+            </NavLink>
+        </li>
+
+        <li class="nav-item px-3">
+            <NavLink class="nav-link" href="/upload">
+                <span class="oi oi-list-rich" aria-hidden="true"></span>Carousel File
+            </NavLink>
+        </li>
+
     </ul>
 </div>
 
-@code {
-    private bool collapseNavMenu = true;
 
-    private string NavMenuCssClass => collapseNavMenu ? "collapse" : null;
-
-    private void ToggleNavMenu()
-    {
-        collapseNavMenu = !collapseNavMenu;
-    }
-}

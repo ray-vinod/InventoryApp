@@ -15,9 +15,12 @@
     <link rel="stylesheet" href="css/bootstrap/bootstrap.min.css" />
     <link href="css/site.css" rel="stylesheet" />
     <link href="InventoryApp.styles.css" rel="stylesheet" />
+    <link href="_content/BlazorPro.Spinkit/spinkit.min.css" rel="stylesheet" />
+
+
 </head>
 <body>
-    <component type="typeof(App)" render-mode="ServerPrerendered" />
+    <component type="typeof(App)" render-mode="Server" />
 
     <div id="blazor-error-ui">
         <environment include="Staging,Production">
@@ -29,6 +32,12 @@
         <a href="" class="reload">Reload</a>
         <a class="dismiss">🗙</a>
     </div>
+
+     <footer class="page-footer font-small border-top text-muted cyan darken-3 ">
+        <div class="footer-copyright text-center py-3 footer">
+            © @DateTime.Now.Date.Year.ToString() Copyright - CIWEC Hospital Pvt. Ltd.
+        </div>
+    </footer>
 
     <script src="_framework/blazor.server.js"></script>
 </body>
