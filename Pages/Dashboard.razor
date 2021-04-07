@@ -1,0 +1,11 @@
+﻿@page "/dashboard"
+@layout MainLayout
+@attribute [Authorize(Roles = "SuperAdmin,Admin")]
+
+<Title Value="Dashboard"></Title>
+
+<h1 class="text-center">
+    Welcome to Dashboard
+</h1>
+
+

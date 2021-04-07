@@ -8,32 +8,28 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - InventoryApp</title>
-    <link rel="stylesheet" href="~/Identity/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/Identity/css/site.css" />
+   <link rel="stylesheet" href="~/css/bootstrap/bootstrap.min.css" />
+    <link href="~/css/site.css" rel="stylesheet" />
+    <link href="~/InventoryApp.styles.css" rel="stylesheet" />
 </head>
 <body>
     <header>
-        <nav class="navbar navbar-expand-sm navbar-light navbar-toggleable-sm bg-white border-bottom box-shadow mb-3">
+        <nav class="navbar navbar-expand-sm navbar-dark navbar-toggleable-sm bg-dark border-bottom fixed-top box-shadow mb-3">
             <div class="container">
-                <a class="navbar-brand" href="~/">InventoryApp</a>
+                <a class="navbar-brand text-white" href="~/">CIWEC OT</a>
                 <button class="navbar-toggler" type="button" data-toggle="collapse" data-target=".navbar-collapse" aria-controls="navbarSupportedContent"
                         aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="navbar-collapse collapse d-sm-inline-flex flex-sm-row-reverse">
-                    @{
-                        var result = Engine.FindView(ViewContext, "_LoginPartial", isMainPage: false);
-                    }
-                    @if (result.Success)
-                    {
-                        await Html.RenderPartialAsync("_LoginPartial");
-                    }
-                    else
-                    {
-                        throw new InvalidOperationException("The default Identity UI layout requires a partial view '_LoginPartial' " +
-                            "usually located at '/Pages/_LoginPartial' or at '/Views/Shared/_LoginPartial' to work. Based on your configuration " +
-                            $"we have looked at it in the following locations: {System.Environment.NewLine}{string.Join(System.Environment.NewLine, result.SearchedLocations)}.");
-                    }
+                    <ul class="navbar-nav flex-grow-1">
+                        <li class="nav-item">
+                            <a class="nav-link text-light" href="/">Home</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-light" href="/aboutus">About Us</a>
+                        </li>
+                    </ul>
                 </div>
             </div>
         </nav>
@@ -44,14 +40,16 @@
             @RenderBody()
         </main>
     </div>
-    <footer class="footer border-top text-muted">
-        <div class="container">
-            &copy; 2021 - InventoryApp - <a asp-area="" asp-page="Privacy">Privacy</a>
+    <footer class="page-footer font-small border-top text-muted cyan darken-3 ">
+        <div class="footer-copyright text-center py-3 footer">
+            © @DateTime.Now.Date.Year.ToString() Copyright - CIWEC Hospital Pvt. Ltd.
         </div>
     </footer>
+
     <script src="~/Identity/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/Identity/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/Identity/js/site.js" asp-append-version="true"></script>
+    <script src="~/js/imageLoad.js" asp-append-version="true"></script>
     @RenderSection("Scripts", required: false)
 </body>
 </html>

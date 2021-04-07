@@ -6,14 +6,15 @@
 
 .main {
     flex: 1;
+    font-size: 14px;
 }
 
 .sidebar {
-    background-image: linear-gradient(180deg, rgb(5, 39, 103) 0%, #3a0647 70%);
+    background-color: #08081b;
 }
 
 .top-row {
-    background-color: #f7f7f7;
+    background-color: #413e3e;
     border-bottom: 1px solid #d6d5d5;
     justify-content: flex-end;
     height: 3.5rem;
@@ -43,16 +44,22 @@
     .top-row a, .top-row .btn-link {
         margin-left: 0;
     }
+
+    .top-nav {
+        display: none !important;
+    }
 }
 
 @media (min-width: 641px) {
     .page {
         flex-direction: row;
+        position: sticky;
     }
 
     .sidebar {
         width: 250px;
-        height: 100vh;
+        min-height: calc(100vh - 30px);
+        max-height: auto;
         position: sticky;
         top: 0;
     }
@@ -63,8 +70,31 @@
         z-index: 1;
     }
 
+    .top-nav {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+    }
+
     .main > div {
-        padding-left: 2rem !important;
-        padding-right: 1.5rem !important;
+        padding-left: 0.09rem !important;
+        padding-right: 0.09rem !important;
     }
 }
+
+.top-nav {
+    background-color: #413e3e;
+    border-bottom: 1px solid #d6d5d5;
+    justify-content: flex-start;
+    height: 3.5rem;
+    display: flex;
+    align-items: center;
+}
+
+    .top-nav > div {
+        text-decoration: none;
+        margin-left: auto;
+        display: flex;
+        justify-content: end;
+        padding-left: 2rem;
+    }

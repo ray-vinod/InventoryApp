@@ -1,0 +1,22 @@
+﻿.icon-container {
+    position: relative;
+    padding: 0;
+    margin: 0;
+}
+
+.arrow-icon-left {
+    position: absolute;
+    top: 180px;
+    left: 170px;
+}
+
+.arrow-icon-right {
+    position: absolute;
+    top: 180px;
+    right: 170px;
+}
+
+.arrow-size {
+    width: 12px;
+    height: 28px;
+}
