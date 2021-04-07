@@ -1,0 +1,54 @@
+﻿@page "/email"
+@using System.Net.NetworkInformation
+
+
+<Title Value="Email"></Title>
+
+<Card Title="Send Mail">
+    <EditForm Model="@mailRequest" OnValidSubmit="@(async()=> await CallSendEmail())">
+        <div class="form-group">
+            <label for="@mailRequest.ToEmail" class="control-label">To Email</label>
+            <InputText @bind-Value="@mailRequest.ToEmail" class="form-control" placeholder="Email address" />
+        </div>
+        <div class="form-group">
+            <label for="@mailRequest.Subject" class="control-label">Subject</label>
+            <InputText @bind-Value="@mailRequest.Subject" class="form-control" />
+        </div>
+        <div class="form-group">
+            <label for="@mailRequest.Body" class="control-label">Body</label>
+            <textarea id="mailTextbox" class="form-control" @bind-value="@mailRequest.Body" @bind-value:event="oninput"></textarea>
+        </div>
+        <div class="form-group">
+            <label for="@mailRequest.Attachments" class="control-label">Insert Files</label>
+            <InputFile OnChange="OnInputFileChange" multiple />
+        </div>
+        <div class="form-group">
+            @if (mailRequest.Attachments != null)
+            {
+                <table class="table">
+                    <tr>
+                        @foreach (var file in mailRequest.Attachments)
+                        {
+                              <td>
+                                  @string.Format($"{file.Name} {(file.Size/1024)} kb")  
+                                  <i class="oi oi-delete text-danger mr-2 ml-2" @onclick="()=>Delete(file.Name)"></i>
+                                  <div class="text-danger">
+                                      @string.Format($" {((file.Size > 512000) ? "file size is too large" : "")}")
+                                  </div>
+                              </td>
+                         }
+                    </tr>
+                </table>
+        }
+        </div>
+        <div class="form-group">
+            <button class="btn btn-outline-dark">
+                <i class="oi oi-envelope-open mr-2"></i>Send
+            </button>
+        </div>
+    </EditForm>
+</Card>
+
+
+
+
