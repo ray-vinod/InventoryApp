@@ -1,0 +1,146 @@
+﻿@typeparam TItem
+@using Microsoft.AspNetCore.Authorization
+@using System.Reflection
+@using System.ComponentModel.DataAnnotations
+
+
+@if (RecordCount < 0 || ShowHideSpinner)
+{
+    <div class="p-4">
+        <Chase Center="true" Color="#17a2b8" />
+    </div>
+}
+else if (RecordCount == 0)
+{
+    <h3 class="text-center text-warning">There is No Record!</h3>
+}
+else
+{
+    @if (memberInfos != null && memberInfos.Length > 0)
+    {
+        <table class=@($"table {CssClass}")>
+            <thead>
+                <tr>
+                    @foreach (var member in memberInfos)
+                    {
+                        if (member.MemberType == MemberTypes.Property &&
+                        !ColsToExcludeCSV.Contains(member.Name, StringComparison.OrdinalIgnoreCase))
+                        {
+                            var attr = member.GetCustomAttribute<DisplayAttribute>();
+                            <th style="display:@((string.Equals("Id", member.Name)) ? "none" : "");
+                                       text-align:@((string.Equals("Name",member.Name)) ? "left":"");">
+                                @((attr !=null)? attr.Name :member.Name)
+                            </th>
+                        }
+                    }
+                    @if (PageUrls != null)
+                    {
+                        <th>Actions</th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in this.Items)
+                {
+                    <tr>
+                        @foreach (var member in memberInfos)
+                        {
+                            @if (member.MemberType == MemberTypes.Property &&
+                           !ColsToExcludeCSV.Contains(member.Name, StringComparison.OrdinalIgnoreCase))
+                            {
+                                if (item.GetType().GetProperty("LifeSpan") != null)
+                                {
+                                    lifeSpan = Convert.ToInt32(item.GetType().GetProperty("LifeSpan").GetValue(item));
+                                    isUsed = Convert.ToBoolean(item.GetType().GetProperty("IsUsed").GetValue(item));
+                                    <td style="display :@((string.Equals("Id", member.Name)) ? "none;" : "");
+                                           color:@((lifeSpan <= 0 && isUsed !=true ) ? "red":
+                                        (lifeSpan <=LifeSpanComparator && isUsed !=true) ? "orange":"");
+                                           text-align:@((string.Equals("Name",member.Name)) ? "left":"");">
+                                        @item.GetType().GetProperty(member.Name).GetValue(item)
+                                    </td>
+                                }
+                                else
+                                {
+                                    <td style="display :@((string.Equals("Id", member.Name)) ? "none;" : "");
+                                               text-align:@((string.Equals("Name",member.Name)) ? "left":"");">
+                                        @item.GetType().GetProperty(member.Name).GetValue(item)
+                                    </td>
+                                }
+                            }
+                        }
+
+                        <td>
+                            @{
+                                var id = item.GetType().GetProperty("Id").GetValue(item).ToString();
+                                if (PageUrls != null)
+                                {
+                                    if (PageUrls.Count > 0)
+                                    {
+                                        foreach (var url in PageUrls)
+                                        {
+                                            if (url.Url == null)
+                                            {
+                                                <Button ButtonText="@url.ButtonText"
+                                                        CssClass="@url.ButtonClass"
+                                                        IconClass="@url.IconClass"
+                                                        OnClick="@(() => OnClickEvnt.InvokeAsync(Guid.Parse(id)))" />
+                                            }
+                                            else
+                                            {
+                                                <Button ButtonText="@url.ButtonText"
+                                                        CssClass="@url.ButtonClass"
+                                                        IconClass="@url.IconClass"
+                                                        LinkString="@($"{url.Url}{id}")" />
+                                            }
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <p class="text-danger"><a href="help">Why this?</a></p>
+                                    }
+                                }
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+}
+
+
+@code
+{
+    MemberInfo[] memberInfos;
+    [Parameter]
+    public List<PageUrl> PageUrls { get; set; }
+    [Parameter]
+    public int RecordCount { get; set; }
+    [Parameter]
+    public bool ShowHideSpinner { get; set; } = false;
+    [Parameter]
+    public List<TItem> Items { get; set; }
+    [Parameter]
+    public string CssClass { get; set; } = "";
+    [Parameter]
+    public string ColsToExcludeCSV { get; set; } = "";
+    [Parameter]
+    public int LifeSpanComparator { get; set; } = 0;
+    [Parameter]
+    public EventCallback<Guid> OnClickEvnt { get; set; }
+
+    private int lifeSpan;
+    private bool isUsed;
+
+
+    protected override void OnParametersSet()
+    {
+        //PageUrls = new List<PageUrl>();
+        if (Items != null && Items.Count > 0)
+        {
+            Type typeOfItem = this.Items[0].GetType();
+            memberInfos = typeOfItem.GetMembers();
+        }
+    }
+
+}
