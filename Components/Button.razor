@@ -1,0 +1,17 @@
+﻿<a href="@LinkString" class="btn @CssClass" @onclick="(()=>OnClick.InvokeAsync())">
+    <span class="oi @IconClass mr-2 ml-2"></span>@ButtonText
+</a>
+
+@code 
+{
+    [Parameter]
+    public EventCallback<Guid> OnClick { get; set; }
+    [Parameter]
+    public string LinkString { get; set; }
+    [Parameter]
+    public string CssClass { get; set; }
+    [Parameter]
+    public string IconClass { get; set; }
+    [Parameter]
+    public string ButtonText { get; set; }
+}

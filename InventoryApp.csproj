@@ -22,9 +22,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<Folder Include="Components\" />
 		<Folder Include="Models\Enums\" />
-		<Folder Include="Helpers\" />
 		<Folder Include="RefreshServices\" />
 		<Folder Include="Services\" />
 	</ItemGroup>
