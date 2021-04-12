@@ -8,6 +8,7 @@
 
 }
 
+
 <form asp-route-returnUrl="@Model.ReturnUrl" method="post" enctype="multipart/form-data">
     <div asp-validation-summary="All" class="text-danger"></div>
 
@@ -58,7 +59,9 @@
         <div class="col-md-6">
             <div class="form-group">
                 <label asp-for="Input.Country"></label>
-                <select id="Country" asp-for="Input.Country" asp-items="@(new SelectList(Model.Countries,"Id","Name"))" class="form-control">
+                <select id="Country" asp-for="Input.Country"
+                    asp-items="Model.Countries" 
+                    class="form-control">
                     <option value="0" selected disabled>-- Select Country --</option>
                 </select>
                 <span asp-validation-for="Input.Country" class="text-danger"></span>
@@ -76,7 +79,9 @@
         <div class="col-md-6">
             <div class="form-group">
                 <label asp-for="Input.Province"></label>
-                <select id="Province" asp-for="Input.Province" asp-items="@(new SelectList(Model.Provinces,"Id","Name"))" class="form-control">
+                <select id="Province" asp-for="Input.Province" 
+                    asp-items="Model.Provinces" 
+                    class="form-control">
                     <option value="0" selected disabled>-- Province Is Not Available --</option>
                 </select>
                 <span asp-validation-for="Input.Province" class="text-danger"></span>
@@ -103,6 +108,7 @@
             <div class="form-group">
                 <label asp-for="Input.ImageFile"></label>
                 <input type="file" asp-for="Input.ImageFile" onchange="previewImage(event)" class="form-control" />
+                <span asp-validation-for="Input.ImageFile" class="text-danger"></span>
             </div>
         </div>
 
