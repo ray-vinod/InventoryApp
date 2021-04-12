@@ -40,7 +40,6 @@ namespace InventoryApp.Models
 
         //Navigation Properties
         public Country Country { get; set; }
-
-
+        
     }
 }

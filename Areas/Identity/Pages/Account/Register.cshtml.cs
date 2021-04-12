@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -57,8 +58,8 @@ namespace InventoryApp.Areas.Identity.Pages.Account
         [BindProperty]
         public InputModel Input { get; set; }
         public string ReturnUrl { get; set; }
-        public IEnumerable<Country> Countries { get; set; }
-        public List<Province> Provinces { get; set; }
+        public IEnumerable<SelectListItem> Countries { get; set; }
+        public IEnumerable<SelectListItem> Provinces { get; set; }
         public IList<AuthenticationScheme> ExternalLogins { get; set; }
 
         public class InputModel
@@ -87,11 +88,12 @@ namespace InventoryApp.Areas.Identity.Pages.Account
             [DataType(DataType.Text)]
             public string City { get; set; }
 
-            //[Required]
+            [Required]
             public string Country { get; set; }
 
             public string Province { get; set; }
 
+            [Required(ErrorMessage = "Please choose profile image")]
             public IFormFile ImageFile { get; set; }
 
             [Required]
@@ -114,8 +116,13 @@ namespace InventoryApp.Areas.Identity.Pages.Account
 
         public async Task OnGetAsync(string returnUrl = null)
         {
-            Countries = await _db.Countries.ToListAsync();
-            Provinces = new List<Province>();
+            Countries = await _db.Countries.Select(x => new SelectListItem
+            {
+                Value = x.Id.ToString(),
+                Text = x.Name
+            }).ToListAsync();
+
+            Provinces = new List<SelectListItem>();
 
             ReturnUrl = returnUrl;
             ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
@@ -141,44 +148,35 @@ namespace InventoryApp.Areas.Identity.Pages.Account
                     ImagePath = Input.Email + ".jpg",
                 };
 
-                //File path to save and rename image
-                string path = Path.Combine(_env.WebRootPath, "Images", user.ImagePath);
-
-                using (var fileStream = new FileStream(path, FileMode.Create))
-                {
-                    await Input.ImageFile.CopyToAsync(fileStream);
-
-                    ImageResize.Resize(fileStream, 100, 120);
-                }
-
                 var result = await _userManager.CreateAsync(user, Input.Password);
-
                 if (result.Succeeded)
                 {
+                    //File path to save and rename image
+                    string path = Path.Combine(_env.WebRootPath, "Images", user.ImagePath);
+
+                    using (var fileStream = new FileStream(path, FileMode.Create))
+                    {
+                        await Input.ImageFile.CopyToAsync(fileStream);
+
+                        ImageResize.Resize(fileStream, 100, 120);
+                    }
+
                     _logger.LogInformation("User created a new account with password.");
 
                     var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
                     code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
-
                     var callbackUrl = Url.Page(
                         "/Account/ConfirmEmail",
                         pageHandler: null,
                         values: new { area = "Identity", userId = user.Id, code = code, returnUrl = returnUrl },
                         protocol: Request.Scheme);
 
-                    if (IsConnectedToInternet())
-                    {
-                        await _emailSender.SendEmailAsync(Input.Email, "Confirm your email",
-                            $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>click here</a>.");
-
-                        _logger.LogInformation("Email sent!");
-                    }
+                    await _emailSender.SendEmailAsync(Input.Email, "Confirm your email",
+                        $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
 
                     if (_userManager.Options.SignIn.RequireConfirmedAccount)
                     {
-                        //return RedirectToPage("RegisterConfirmation", new { email = Input.Email, returnUrl = returnUrl });
-                        var url = Url.Content("~/");
-                        return LocalRedirect(url);
+                        return RedirectToPage("RegisterConfirmation", new { email = Input.Email, returnUrl = returnUrl });
                     }
                     else
                     {
@@ -186,6 +184,34 @@ namespace InventoryApp.Areas.Identity.Pages.Account
                         return LocalRedirect(returnUrl);
                     }
                 }
+
+                //get all countries list
+                Countries = await _db.Countries.Select(x => new SelectListItem
+                {
+                    Value = x.Id.ToString(),
+                    Text = x.Name
+                }).ToListAsync();
+
+                //set selected country
+                foreach (var item in Countries)
+                {
+                    if (item.Value == user.CountryId.ToString())
+                    {
+                        item.Selected = true;
+                    }
+                }
+
+                Provinces = _db.Provinces.Where(x => x.Id == user.ProvinceId)
+                .Select(x => new SelectListItem
+                {
+                    Value = x.Id.ToString(),
+                    Text = x.Name,
+                    Selected = true,
+                });
+
+                //file path
+                var filePath = Path.GetTempFileName();
+
                 foreach (var error in result.Errors)
                 {
                     ModelState.AddModelError(string.Empty, error.Description);
