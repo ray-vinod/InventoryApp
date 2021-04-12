@@ -1,0 +1,19 @@
+﻿.card {
+    margin-top: 5px;
+    border: 3px solid rgba(0,0,0,.125);
+    border-radius: .25rem;
+    background-color: #05725b;
+    color: #000000;
+}
+
+.car-img {
+    margin-top: 10px;
+    margin-bottom: 10px;
+    vertical-align: middle;
+    border-style: none;
+    align-self: center;
+}
+
+.card-body {
+    padding: 0.25rem;
+}

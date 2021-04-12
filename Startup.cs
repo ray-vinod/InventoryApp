@@ -1,24 +1,18 @@
+using Blazored.Modal;
 using InventoryApp.Areas.Identity;
 using InventoryApp.Data;
 using InventoryApp.Models;
 using InventoryApp.RefreshServices;
 using InventoryApp.Services;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.UI;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace InventoryApp
 {
@@ -56,7 +50,9 @@ namespace InventoryApp
             //App services
             //Singleton => For all user
             //Scoped => for one user
-            //Transient => per page 
+            //Transient => per page
+            services.AddBlazoredModal();
+
             services.AddSingleton<AlertService>();
             services.AddSingleton<IndexRefreshService>();
 
