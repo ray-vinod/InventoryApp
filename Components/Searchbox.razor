@@ -1,0 +1,9 @@
+﻿<input type="text" class="form-control" placeholder="Search by Item's Name"
+       @oninput="OnSearchTexChanged" />
+<span class="oi oi-magnifying-glass input-icon"></span>
+
+
+@code {
+    [Parameter]
+    public EventCallback<ChangeEventArgs> OnSearchTexChanged { get; set; }
+}

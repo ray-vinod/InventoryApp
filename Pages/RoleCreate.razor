@@ -1,0 +1,46 @@
+﻿@page "/role/create"
+@page "/role/create/{id}"
+@layout MainLayout
+@attribute [Authorize(Roles="SuperAdmin")]
+
+<Title Value="@title"></Title>
+
+<div class="d-flex flex-column align-items-center justify-content-start">
+    <Card Title="@((model.Id == null) ? "Add New Role":"Update Role")" CssClass="col-md-6">
+        <EditForm Model="@model" OnValidSubmit="AddEdit">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div class="from-group">
+                <label class="control-label">Role Name</label>
+                <InputText @bind-Value="model.Name" class="form-control" />
+                <ValidationMessage For="()=>model.Name" />
+            </div>
+
+            <div class="from-group">
+                <label class="control-label">Description</label>
+                <InputText @bind-Value="model.Description" class="form-control" />
+                <ValidationMessage For="()=>model.Description" />
+            </div>
+
+            <div class="form-group">
+                <button class="btn btn-outline-info mt-2">@(Id ==null ? "Add Role":"Update Role")</button>
+                @if (model.Name != null)
+                {
+                    <a class="btn btn-outline-warning float-right" 
+                        @onclick="@(()=> model = new RoleViewModel())">
+                        <span class="oi oi-delete mr-2"></span>Reset
+                    </a>
+                }
+                else
+                {
+                    <a class="btn btn-outline-secondary float-right" 
+                        @onclick="@(()=> NavigationManager.NavigateTo("/role/index",false))">
+                        <span class="oi oi-arrow-circle-left mr-2 mb-2"></span>Back To List
+                    </a>
+                }
+            </div>
+        </EditForm>
+    </Card>
+</div>
+
