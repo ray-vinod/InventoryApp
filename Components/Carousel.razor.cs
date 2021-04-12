@@ -23,21 +23,22 @@ namespace InventoryApp.Components
             cts = new CancellationTokenSource();
             ct = new CancellationToken();
 
-            InitCarousel();
+            await InitCarousel();
         }
 
         private async Task InitCarousel()
         {
+            if (!Start)
+            {
+                cts.Cancel();
+            }
+
             while (!cts.IsCancellationRequested)
             {
                 await Task.Delay(3500, ct);
                 currentPossition++;
 
                 await InvokeAsync(() => StateHasChanged());
-                if (!Start)
-                {
-                    cts.Cancel();
-                }
             }
         }
 

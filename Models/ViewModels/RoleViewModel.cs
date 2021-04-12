@@ -1,4 +1,4 @@
-﻿namespace InventoryApp.Pages
+﻿namespace InventoryApp.Models.ViewModels
 {
     public class RoleViewModel
     {

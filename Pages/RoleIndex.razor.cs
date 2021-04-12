@@ -1,6 +1,7 @@
 using InventoryApp.Helpers;
 using InventoryApp.Models;
 using InventoryApp.Models.Enums;
+using InventoryApp.Models.ViewModels;
 using InventoryApp.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Identity;
