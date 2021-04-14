@@ -56,12 +56,15 @@ namespace InventoryApp
 
             services.AddSingleton<AlertService>();
             services.AddSingleton<IndexRefreshService>();
+            
+            
+            services.AddScoped<UserStateService>(); //Update User information who have logged in.
 
+            
             services.Configure<MailSettings>(Configuration.GetSection("MailSettings"));
             services.AddTransient<IMailService, MailService>(); //send email for any one and with attachment
             services.AddTransient<IEmailSender, MailSender>(); //send email for register user only on registration
-
-            services.AddScoped<UserStateService>(); //Update User information who have logged in.
+            services.AddTransient<PrefixService>();
 
 
 
