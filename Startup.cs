@@ -46,6 +46,7 @@ namespace InventoryApp
             services.AddServerSideBlazor();
             services.AddScoped<AuthenticationStateProvider, RevalidatingIdentityAuthenticationStateProvider<ApplicationUser>>();
             services.AddDatabaseDeveloperPageExceptionFilter();
+            services.AddProtectedBrowserStorage();
 
             //App services
             //Singleton => For all user

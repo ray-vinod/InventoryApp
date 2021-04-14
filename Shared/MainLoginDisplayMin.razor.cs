@@ -1,33 +1,35 @@
 using InventoryApp.Services;
 using Microsoft.AspNetCore.Components;
-using System;
+using Microsoft.AspNetCore.Components.ProtectedBrowserStorage;
+using System.Threading.Tasks;
+
+
 
 namespace InventoryApp.Shared
 {
-    public partial class MainLoginDisplayMin : IDisposable
+    public partial class MainLoginDisplayMin
     {
         public string name;
         [Inject] private UserStateService UserState { get; set; }
+        [Inject] public ProtectedSessionStorage Storage { get; set; }
 
 
-        protected override void OnInitialized()
+
+        protected override async Task OnInitializedAsync()
         {
-            UserState.OnRefreshRequeste += PageRefreshHandler;
-            name = UserState.Name;
-        }
-
-        private async void PageRefreshHandler()
-        {
-            await InvokeAsync(() =>
+            if (UserState.Name == null)
             {
-                name = UserState.Name;
-                StateHasChanged();
-            });
-        }
+                var readName = await Storage.GetAsync<string>("name");
+                var readImagePath = await Storage.GetAsync<string>("imgSrc");
 
-        public void Dispose()
-        {
-            UserState.OnRefreshRequeste -= PageRefreshHandler;
+                if (readImagePath.Success && readName.Success)
+                {
+                    UserState.Name = readName.Value;
+                    UserState.ImagePath = readImagePath.Value;
+                }
+            }
+
+            name = UserState.Name;
         }
 
     }
