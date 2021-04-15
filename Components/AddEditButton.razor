@@ -1,0 +1,18 @@
+﻿
+<button type="submit" class="btn btn-outline-info">
+    <span class="oi oi-check mr-2 "></span>@((Text !=string.Empty) ? Text:(Id !=Guid.Empty) ? "Update":"Add")
+    @if (Id != Guid.Empty)
+    {
+        <span class="float-right ml-2 ">
+            <Wave Center="true" Color="#17a2b8" Size="1.4rem" />
+        </span>
+    }
+</button>
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+    [Parameter]
+    public string Text { get; set; } = string.Empty;
+    private string btnText = string.Empty;
+}
