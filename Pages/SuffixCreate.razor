@@ -1,0 +1,36 @@
+﻿@page "/suffix/create"
+@page "/suffix/edit"
+@page "/suffix/edit/{id:guid}"
+@layout MainLayout
+@attribute [Authorize(Roles = "SuperAdmin,Admin")]
+
+<Title Value="@title"></Title>
+
+<div class="col-md-6">
+    <Card Title="Add New Suffix">
+        <EditForm Model="@suffix" OnValidSubmit="AddEdit">
+            <DataAnnotationsValidator />
+            <div class="form-group">
+                <label class="control-label">Name</label>
+                <input type="text" @bind="@suffix.Name" @ref="firstInput" @onkeyup:preventDefault class="form-control" />
+                <ValidationMessage For="@(()=> suffix.Name)" />
+            </div>
+            <div class="form-group">
+                <AddEditButton Id="@suffix.Id" />
+                @if (suffix.Name != null)
+                {
+                    <a class="btn btn-outline-warning float-right" @onclick="@(()=> suffix = new Suffix())">
+                        <span class="oi oi-delete mr-2"></span>Reset
+                    </a>
+                }
+                else
+                {
+                    <a class="btn btn-outline-secondary float-right"
+                   @onclick="@(()=> NavigationManager.NavigateTo("/suffix/index",false))">
+                        <span class="oi oi-arrow-circle-left mr-2 mb-2"></span>Back To List
+                    </a>
+                }
+            </div>
+        </EditForm>
+    </Card>
+</div>
