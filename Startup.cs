@@ -56,10 +56,9 @@ namespace InventoryApp
 
             services.AddSingleton<AlertService>();
             services.AddSingleton<IndexRefreshService>();
-            
+            services.AddSingleton<UpdateService>();
             
             services.AddScoped<UserStateService>(); //Update User information who have logged in.
-
             
             services.Configure<MailSettings>(Configuration.GetSection("MailSettings"));
             services.AddTransient<IMailService, MailService>(); //send email for any one and with attachment

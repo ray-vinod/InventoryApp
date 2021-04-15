@@ -24,12 +24,12 @@ namespace InventoryApp.Pages
         [Inject] public AlertService AlertService { get; set; }
         [Inject] public PrefixService PrefixService { get; set; }
         [Inject] public ILogger<PrefixCreate> Logger { get; set; }
+        [Inject] public UpdateService UpdateService { get; set; }
 
 
 
-        protected override async Task OnInitializedAsync()
+        protected override void OnInitialized()
         {
-            await Task.Delay(0);
             prefix = new Prefix();
 
         }
@@ -59,7 +59,7 @@ namespace InventoryApp.Pages
             var isExist = result.FirstOrDefault();
 
             //Prevent duplication item
-            if (isExist != null && prefix.Id != isExist.Id)
+            if (isExist != null && prefix.Id != isExist.Id) 
             {
                 Logger.LogWarning("{0} is already exist!", prefix.Name);
                 AlertService.AddMessage(new Alert(prefix.Name + AlertMessage.ExistInfo,
@@ -81,6 +81,7 @@ namespace InventoryApp.Pages
                     AlertService.AddMessage(new Alert(prefix.Name + AlertMessage.AddInfo,
                         AlertType.Success));
 
+                    UpdateService.UpdatePage("prefix/index",false);
                 }
 
                 getFocus = true;
@@ -105,7 +106,9 @@ namespace InventoryApp.Pages
                     AlertService.AddMessage(new Alert(prefix.Name + AlertMessage.UpdateInfo,
                         AlertType.Success));
 
-                    NavigationManager.NavigateTo("/prefix/index", false);
+                    UpdateService.UpdatePage("prefix/index",true);
+
+                    NavigationManager.NavigateTo("/prefix/index",false);
                 }
             }
         }

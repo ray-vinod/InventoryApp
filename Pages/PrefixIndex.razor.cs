@@ -14,7 +14,7 @@ using System.Threading.Tasks;
 
 namespace InventoryApp.Pages
 {
-    public partial class PrefixIndex
+    public partial class PrefixIndex : IDisposable
     {
         //Local varialbels
         public List<Prefix> prefixes;
@@ -28,6 +28,8 @@ namespace InventoryApp.Pages
         [Inject] public AlertService AlertService { get; set; }
         [Inject] public ILogger<PrefixIndex> Logger { get; set; }
         [Inject] public NavigationManager NavigationManager { get; set; }
+        [Inject] public UpdateService UpdateService { get; set; }
+
 
 
         protected override async Task OnInitializedAsync()
@@ -37,7 +39,29 @@ namespace InventoryApp.Pages
             urls.Add(new PageUrl("prefix/edit/", "Edit", "oi-pencil", "btn-outline-info ml-2"));
             urls.Add(new PageUrl(null, "Delete", "oi-trash", "btn-outline-danger ml-2"));
 
+            UpdateService.OnUpdateRequested += PageUpdateHandler;
+
             await LoadData(PagingParameter.CurrentPage, null);
+        }
+
+        public async void PageUpdateHandler(string property,bool isUpdate)
+        {
+            await InvokeAsync(async () =>
+            {
+                foreach (var item in property.Split(",",StringSplitOptions.RemoveEmptyEntries))
+                {
+                    if (item.Equals("prefix/index") && !isUpdate)
+                    {
+                        await LoadData(PagingParameter.CurrentPage, null);
+                    }
+                    else
+                    {
+                        NavigationManager.NavigateTo("/prefix/index",true);
+                    }
+                }
+
+                StateHasChanged();
+            });
         }
 
         private async Task LoadData(int page, string searchText)
@@ -99,15 +123,14 @@ namespace InventoryApp.Pages
                     AlertService.AddMessage(new Alert(prefix.Name + AlertMessage.DeleteInfo,
                         AlertType.Error));
 
-                    await LoadData(PagingParameter.CurrentPage,null);
-
+                    UpdateService.UpdatePage("prefix/index",false);
                 }
             }
         }
 
         private async Task CallData(int page, string searchText)
         {
-            prefixes = new List<Prefix>();
+            prefixes.Clear();
             Logger.LogInformation("Prefix list is loading!");
 
             if (searchText != null)
@@ -135,6 +158,11 @@ namespace InventoryApp.Pages
                     StateHasChanged();
                 }
             }
+        }
+
+        public void Dispose()
+        {
+            UpdateService.OnUpdateRequested -= PageUpdateHandler;
         }
     }
 }

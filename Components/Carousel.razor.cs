@@ -23,7 +23,7 @@ namespace InventoryApp.Components
             cts = new CancellationTokenSource();
             ct = new CancellationToken();
 
-            await InitCarousel();
+            //await InitCarousel();
         }
 
         private async Task InitCarousel()
