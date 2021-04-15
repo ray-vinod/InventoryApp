@@ -1,0 +1,43 @@
+﻿@page "/prefix/index"
+@layout MainLayout
+@attribute [Authorize(Roles = "SuperAdmin,Admin")]
+
+<Title Value="Prefix-index"></Title>
+
+<Card Title="List of Prefix">
+    @if (!spinnerOnOff)
+    {
+        @*Top navigation section above the tablegrid*@
+        <div class="d-sm-flex d-flex flex-wrap">
+            <div>
+                <Button ButtonText="Add New"
+                    CssClass="btn-outline-info"
+                    IconClass="oi-plus"
+                    LinkString="/prefix/create" />
+            </div>
+            @if (PagingParameter.TotalPages != 0)
+            {
+                <div class="ml-auto p-0 icon-container">
+                    <Searchbox OnSearchTexChanged="OnSearchTexChanged" />
+                </div>
+            }
+        </div>
+    } 
+    @*Tabel display data form generic type Tablecomponent*@
+    <Table Items="prefixes"
+           ColsToExcludeCSV="Products"
+           CssClass="table-striped text-center align-self-start"
+           ShowHideSpinner="spinnerOnOff"
+           RecordCount="PagingParameter.TotalPages"
+           PageUrls="urls"
+           OnClickEvnt="Delete" />
+
+    @if (PagingParameter.TotalPages != 0)
+    {
+        @*Buttom of the table pagination link using PaginationComponent*@
+        <PageLink CurrentPage="PagingParameter.CurrentPage"
+                SelectedPage="SelectedPage"
+                TotalPage="PagingParameter.TotalPages" />
+    }
+
+</Card>
