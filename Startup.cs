@@ -65,6 +65,9 @@ namespace InventoryApp
             services.AddTransient<IEmailSender, MailSender>(); //send email for register user only on registration
             services.AddTransient<PrefixService>();
             services.AddTransient<SuffixService>();
+            services.AddTransient<ProductService>();
+            services.AddTransient<StockService>();
+
 
 
         }

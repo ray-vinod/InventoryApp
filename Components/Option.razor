@@ -1,0 +1,9 @@
+﻿<option value="@((Value == Guid.Empty)? ValueStr: Value)">@ChildContent</option>
+
+@code {
+
+    [Parameter] public string ValueStr { get; set; } = string.Empty;
+    [Parameter] public Guid Value { get; set; } = Guid.Empty;
+    [Parameter] public RenderFragment ChildContent { get; set; }
+
+}
