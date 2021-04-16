@@ -1,0 +1,42 @@
+﻿@page "/product/index"
+@layout MainLayout
+@attribute [Authorize(Roles = "SuperAdmin,Admin")]
+
+<Title Value="Product-index"></Title>
+
+<Card Title="List of Product">
+    @if (!spinnerOnOff)
+    {
+        @*Top navigation section above the tablegrid*@
+        <div class="d-sm-flex d-flex flex-wrap">
+            <div>
+                <Button ButtonText="Add New"
+                    CssClass="btn-outline-info mb-2"
+                    IconClass="oi-plus"
+                    LinkString="/product/create" />
+            </div>
+            @if (PagingParameter.TotalPages != 0)
+            {
+                <div class="ml-auto p-0 mb-2 icon-container">
+                    <Searchbox OnSearchTexChanged="OnSearchTexChanged" />
+                </div>
+            }
+        </div>
+    } 
+    @*Tabel display data form generic type Tablecomponent*@
+    <Table Items="products"
+           CssClass="table-striped text-center align-self-start"
+           ShowHideSpinner="spinnerOnOff"
+           RecordCount="PagingParameter.TotalPages"
+           PageUrls="urls"
+           OnClickEvnt="Delete" />
+
+    @if (PagingParameter.TotalPages != 0)
+    {
+        @*Buttom of the table pagination link using PaginationComponent*@
+        <PageLink CurrentPage="PagingParameter.CurrentPage"
+                SelectedPage="SelectedPage"
+                TotalPage="PagingParameter.TotalPages" />
+    }
+
+</Card>
