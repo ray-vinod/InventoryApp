@@ -1,0 +1,77 @@
+﻿@page "/product/create"
+@page "/product/edit"
+@page "/product/edit/{id:guid}"
+@layout MainLayout
+@attribute [Authorize(Roles = "SuperAdmin,Admin")]
+
+
+<Title Value="@title"></Title>
+
+<Card Title="@((product.Id == Guid.Empty) ? "Add New Product":"Update Product")">
+    <EditForm Model="@product" OnValidSubmit="AddEdit">
+        <DataAnnotationsValidator />
+        <div class="form-row align-items-center">
+            <div class="form-group col-md-6">
+                <label class="control-label">Item's Prefix</label>
+                <select @bind="product.PrefixId" @ref="firstInput" tabindex="0" class="form-control">
+                    <Option>-- Select Any One --</Option>
+
+                    @foreach (var prefix in prefixes)
+                    {
+                        <Option Value="prefix.Id">@prefix.Name</Option>
+                    }
+                </select>
+            </div>
+
+            <div class="form-group col-md-6">
+                <label class="control-label">Item's Name</label>
+                <InputText @bind-Value="product.Name" class="form-control" placeholder="Product's Name" />
+            </div>
+
+            <div class="form-group col-md-6">
+                <label for="@product.SuffixId" tabindex="1" class="control-label">Item's Suffix</label>
+                <select @bind="product.SuffixId" class="form-control">
+                    <Option Value="@(Guid.Empty)">-- Select Any One --</Option>
+
+                    @foreach (var suffix in suffixes)
+                    {
+                        <Option Value="@suffix.Id">@suffix.Name</Option>
+                    }
+
+                </select>
+            </div>
+
+            <div class="form-group col-md-6">
+                <label for="@product.Group" class="control-label">Item's Group</label>
+                <select @bind="product.Group" class="form-control">
+                    <Option Value="@(Guid.Empty)">-- Select Any One --</Option>
+                    @foreach (var item in Enum.GetValues(typeof(EntityGroup)))
+                    {
+                        <Option ValueStr="@item.ToString()">@item</Option>
+                    }
+                </select>
+            </div>
+
+        </div>
+
+        <div class="form-group">
+            <AddEditButton Id="product.Id" />
+            @if (product.Name != null)
+            {
+                <a class="float-right btn btn-outline-warning" @onclick="Reset">
+                    <span class="oi oi-delete mr-2"></span>Reset
+                </a>
+            }
+            else
+            {
+                <a @onclick="@(()=>NavigationManager.NavigateTo("/product/index",false))" class="float-right btn btn-outline-secondary">
+                    <span class="oi oi-arrow-circle-left mr-2 mb-2"></span>Back To List
+                </a>
+            }
+        </div>
+
+        <div class="form-group">
+            <ValidationSummary />
+        </div>
+    </EditForm>
+</Card>
