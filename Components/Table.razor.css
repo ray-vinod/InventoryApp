@@ -1,0 +1,4 @@
+﻿.table td, .table th td {
+    padding: .05em;
+    vertical-align: middle;
+}
