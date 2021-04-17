@@ -1,11 +1,13 @@
 using Blazored.Modal;
 using Blazored.Modal.Services;
 using InventoryApp.Components;
+using InventoryApp.Data;
 using InventoryApp.Helpers;
 using InventoryApp.Models;
 using InventoryApp.Models.Enums;
 using InventoryApp.Services;
 using Microsoft.AspNetCore.Components;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -23,12 +25,13 @@ namespace InventoryApp.Pages
 
         [CascadingParameter] IModalService Modal { get; set; }
         [Inject] public PrefixService PrefixService { get; set; }
+        [Inject] public ApplicationDbContext Context { get; set; }
 
         //Refresh Product Create and Index page
         [Inject] public AlertService AlertService { get; set; }
         [Inject] public ILogger<PrefixIndex> Logger { get; set; }
         [Inject] public NavigationManager NavigationManager { get; set; }
-        [Inject] public UpdateService UpdateService { get; set; }
+        [Inject] public UpdateService<Prefix> UpdateService { get; set; }
 
 
 
@@ -44,19 +47,25 @@ namespace InventoryApp.Pages
             await LoadData(PagingParameter.CurrentPage, null);
         }
 
-        public async void PageUpdateHandler(string property,bool isUpdate)
+        public async void PageUpdateHandler(string property, Prefix prefix)
         {
             await InvokeAsync(async () =>
             {
-                foreach (var item in property.Split(",",StringSplitOptions.RemoveEmptyEntries))
+                foreach (var item in property.Split(",", StringSplitOptions.RemoveEmptyEntries))
                 {
-                    if (item.Equals("prefix/index") && !isUpdate)
+                    if (item.Equals("prefix/index"))
                     {
                         await LoadData(PagingParameter.CurrentPage, null);
                     }
-                    else
+
+                    if (prefix != null)
                     {
-                        NavigationManager.NavigateTo("/prefix/index",true);
+                        //find index of list and remove
+                        int index = prefixes.FindIndex(x => x.Id == prefix.Id);
+                        prefixes.RemoveAt(index);
+
+                        //find the updated entity and add to list at index
+                        prefixes.Insert(index, prefix);
                     }
                 }
 
@@ -123,7 +132,7 @@ namespace InventoryApp.Pages
                     AlertService.AddMessage(new Alert(prefix.Name + AlertMessage.DeleteInfo,
                         AlertType.Error));
 
-                    UpdateService.UpdatePage("prefix/index",false);
+                    UpdateService.UpdatePage("prefix/index", null);
                 }
             }
         }
