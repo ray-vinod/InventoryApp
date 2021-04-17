@@ -1,0 +1,81 @@
+﻿@page "/stock/index"
+
+<Title Value="Stock-index"></Title>
+
+<div class="d-flex justify-content-center flex-wrap">
+    <Card Title="List of Stock">
+        @if (!spinnerOnOff)
+        {
+
+            @*Top navigation section above the tablegrid*@
+            <div class="d-sm-flex d-flex flex-wrap">
+                <div>
+                    @if (stocks.Count > 0)
+                    {
+                        <Button ButtonText="Download" CssClass="btn-outline-secondary mb-2"
+                                IconClass="oi-arrow-circle-bottom mr-2" OnClick="Download" />
+                    }
+
+                </div>
+                @if (PaginationMetadata.TotalPages != 0)
+                {
+                    <div class="ml-auto mb-2 icon-container">
+                        <Searchbox OnSearchTexChanged="OnSearchTexChanged" />
+                    </div>
+                }
+            </div>
+        }
+
+        @if (stocks.Count > 0)
+        {
+            @*Tabel display data form generic type Tablecomponent*@
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Purchases</th>
+                        <th>Purechases Return</th>
+                        <th>Sales</th>
+                        <th>Sale Return</th>
+                        <th>In Stock</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var stock in stocks)
+                    {
+                        <tr>
+                            <td>@stock.Product.Prefix?.Name @stock.Product.Name</td>
+                            <td>@stock.TotalReceive</td>
+                            <td>@stock.TotalReceiveReturn</td>
+                            <td>@stock.TotalIssue</td>
+                            <td>@stock.TotalIssueReturn</td>
+                            <td>@stock.InStock</td>
+                            <td>
+                                @* <a @onclick="@(()=> NavigationManager.NavigateTo("/stock/detail/"+stock.ProductId))" class="btn btn-outline-info">
+                                    <span class="oi oi-list mr-2"></span>Detail
+                                    </a>*@
+                                <a class="btn btn-outline-info">
+                                    <span class="oi oi-list mr-2"></span>Detail
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <div class="text-warning text-center">
+                <h3>No Record Found!</h3>
+            </div>
+        }
+
+        @if (PaginationMetadata.TotalPages != 0)
+        {
+            @*Buttom of the table pagination link using PaginationComponent*@
+            <PagingLink CurrentPage="PaginationMetadata.CurrentPage" TotalPage="PaginationMetadata.TotalPages"
+                    SelectedPage="SelectedPage" />
+        }
+    </Card>
+</div>
