@@ -24,7 +24,7 @@ namespace InventoryApp.Pages
         [Inject] public AlertService AlertService { get; set; }
         [Inject] public PrefixService PrefixService { get; set; }
         [Inject] public ILogger<PrefixCreate> Logger { get; set; }
-        [Inject] public UpdateService UpdateService { get; set; }
+        [Inject] public UpdateService<Prefix> UpdateService { get; set; }
 
 
 
@@ -81,7 +81,7 @@ namespace InventoryApp.Pages
                     AlertService.AddMessage(new Alert(prefix.Name + AlertMessage.AddInfo,
                         AlertType.Success));
 
-                    UpdateService.UpdatePage("prefix/index",false);
+                    UpdateService.UpdatePage("prefix/index",null);
                 }
 
                 getFocus = true;
@@ -106,7 +106,8 @@ namespace InventoryApp.Pages
                     AlertService.AddMessage(new Alert(prefix.Name + AlertMessage.UpdateInfo,
                         AlertType.Success));
 
-                    UpdateService.UpdatePage("prefix/index",true);
+                    //send id for the update page
+                    UpdateService.UpdatePage("prefix/update",isUpdate);
 
                     NavigationManager.NavigateTo("/prefix/index",false);
                 }

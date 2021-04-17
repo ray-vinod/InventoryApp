@@ -2,13 +2,13 @@
 
 namespace InventoryApp.Services
 {
-    public class UpdateService
+    public class UpdateService<TEntity> where TEntity:class
     {
-        public event Action<string, bool> OnUpdateRequested;
+        public event Action<string, TEntity> OnUpdateRequested;
 
-        public void UpdatePage(string property, bool isUpdate)
+        public void UpdatePage(string property,TEntity entity)
         {
-            OnUpdateRequested?.Invoke(property, isUpdate);
+            OnUpdateRequested?.Invoke(property, entity);
         }
     }
 }

@@ -40,7 +40,7 @@ namespace InventoryApp.Pages
         [Inject]
         public NavigationManager NavigationManager { get; set; }
         [Inject]
-        public UpdateService UpdateService { get; set; }
+        public UpdateService<Product> UpdateService { get; set; }
 
 
 
@@ -61,19 +61,23 @@ namespace InventoryApp.Pages
 
         }
 
-        public async void PageUpdateHandler(string property, bool isUpdate)
+        public async void PageUpdateHandler(string property, Product product)
         {
             await InvokeAsync(async () =>
             {
                 foreach (var item in property.Split(",", StringSplitOptions.RemoveEmptyEntries))
                 {
-                    if (item.Equals("product/index") && !isUpdate)
+                    if (item.Equals("product/index"))
                     {
                         await LoadData(PagingParameter.CurrentPage, null);
                     }
-                    else
+                    
+                    if(product != null)
                     {
-                        NavigationManager.NavigateTo("/product/index", true);
+                        int index = products.FindIndex(x=>x.Id==product.Id);
+                        products.RemoveAt(index);
+
+                        products.Insert(index,product);
                     }
                 }
 
@@ -187,7 +191,7 @@ namespace InventoryApp.Pages
                     AlertService.AddMessage(new Alert(product.Name + AlertMessage.DeleteInfo,
                         AlertType.Error));
 
-                    UpdateService.UpdatePage("product/index", false);
+                    UpdateService.UpdatePage("product/index", null);
                 }
             }
         }
