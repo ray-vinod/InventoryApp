@@ -28,7 +28,7 @@ namespace InventoryApp.Pages
         [Inject] public AlertService AlertService { get; set; }
         [Inject] public ILogger<SuffixIndex> Logger { get; set; }
         [Inject] public NavigationManager NavigationManager { get; set; }
-        [Inject] public UpdateService UpdateService { get; set; }
+        [Inject] public UpdateService<Suffix> UpdateService { get; set; }
 
 
 
@@ -44,18 +44,26 @@ namespace InventoryApp.Pages
             await LoadData(PagingParameter.CurrentPage, null);
         }
 
-        public async void PageUpdateHandler(string property, bool isUpdate)
+        public async void PageUpdateHandler(string property, Suffix suffix)
         {
             await InvokeAsync(async () =>
             {
                 foreach (var item in property.Split(",", StringSplitOptions.RemoveEmptyEntries))
                 {
-                    if (item.Equals("suffix/index") && !isUpdate)
+                    if (item.Equals("suffix/index"))
                     {
                         await LoadData(PagingParameter.CurrentPage, null);
                     }
-                    else
+
+                    if(suffix !=null)
                     {
+                        //find index and remove
+                        int index = suffixes.FindIndex(x=>x.Id==suffix.Id);
+                        suffixes.RemoveAt(index);
+
+                        //find new update entity from db
+                        suffixes.Insert(index,suffix);
+
                         NavigationManager.NavigateTo("/suffix/index", true);
                     }
                 }
@@ -123,7 +131,7 @@ namespace InventoryApp.Pages
                     AlertService.AddMessage(new Alert(suffix.Name + AlertMessage.DeleteInfo,
                         AlertType.Error));
 
-                    UpdateService.UpdatePage("suffix/index", false);
+                    UpdateService.UpdatePage("suffix/index", null);
                 }
             }
         }
