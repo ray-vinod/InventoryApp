@@ -59,7 +59,9 @@ namespace InventoryApp
             services.AddSingleton<UpdateService<Prefix>>();
             services.AddSingleton<UpdateService<Suffix>>();
             services.AddSingleton<UpdateService<Product>>();
-            
+            services.AddSingleton<UpdateService<Receive>>();
+            services.AddSingleton<UpdateService<Issue>>();
+
             services.AddScoped<UserStateService>(); //Update User information who have logged in.
             
             services.Configure<MailSettings>(Configuration.GetSection("MailSettings"));
