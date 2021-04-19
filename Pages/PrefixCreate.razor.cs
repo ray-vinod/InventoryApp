@@ -81,7 +81,7 @@ namespace InventoryApp.Pages
                     AlertService.AddMessage(new Alert(prefix.Name + AlertMessage.AddInfo,
                         AlertType.Success));
 
-                    UpdateService.UpdatePage("prefix/index",null);
+                    UpdateService.UpdatePage();
                 }
 
                 getFocus = true;
@@ -107,7 +107,7 @@ namespace InventoryApp.Pages
                         AlertType.Success));
 
                     //send id for the update page
-                    UpdateService.UpdatePage("prefix/update",isUpdate);
+                    UpdateService.UpdatePage(isUpdate);
 
                     NavigationManager.NavigateTo("/prefix/index",false);
                 }

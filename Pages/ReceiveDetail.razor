@@ -1,0 +1,103 @@
+﻿@page "/receive/detail"
+@page "/receive/detail/{id:guid}"
+@layout MainLayout
+@attribute [Authorize(Roles = "SuperAdmin,Admin")]
+
+<Title Value="Receive-detail"></Title>
+
+@if (load)
+{
+    <Card Title="Receive Item Detail" BgClass="@((lifeSpan <= 0 && receive.IsUse !=true ) ? "danger":
+                                        (lifeSpan <=90 && receive.IsUse !=true) ? "warning":"info")">
+        <Button ButtonText="Back To List" CssClass="btn-outline-secondary mb-4 ml-4" IconClass="oi-arrow-circle-left ml-2"
+            LinkString="/receive/index" />
+
+        @if (receive != null)
+        {
+            if (receive.Note == null && receive.IsUse != true && receive.IsDelete != true)
+            {
+                if (receive.Quantity != receive.UseQuantity)
+                {
+                    <Button ButtonText="Cancel Entry" CssClass="btn-outline-primary mb-4 ml-4" IconClass="oi-close ml-2"
+                            OnClick="CancellationRequest" />
+
+                    <Button ButtonText="Return" CssClass="btn-outline-info mb-4 ml-4" IconClass="oi-action-undo ml-2"
+                            LinkString="@($"/receive/return/{receive.Id}")" />
+
+                    <AuthorizeView Roles="Admin,SuperAdmin">
+                        <Authorized>
+                            <Button ButtonText="Edit" CssClass="btn-outline-secondary mb-4 ml-4" IconClass="oi-pencil ml-2"
+                                    OnClick="@(()=>NavigationManager.NavigateTo($"/receive/edit/{receive.Id}?q=edit"))" />
+                        </Authorized>
+                    </AuthorizeView>
+                }
+            }
+
+            <div class="d-flex flex-sm-column flex-md-row flex-wrap p-0 m-0 align-items-center
+             justify-content-between ">
+                <div class="d-flex flex-row flex-wrap col-sm-12 col-md-6 p-0 m-0 align-self-start">
+                    <div class="col-12">
+                        <div>
+                            <label class="control-label">Prefix</label>
+                            <label class="form-control">
+                                @((receive.Product.Prefix !=null)? receive.Product.Prefix.Name : "NULL")
+                            </label>
+                        </div>
+                        <div>
+                            <label class="control-label">Product Name</label>
+                            <label class="form-control">@receive.Product.Name</label>
+                        </div>
+                        <div>
+                            <label class="control-label">Suffix</label>
+                            <label class="form-control">
+                                @((receive.Product.Suffix !=null)? receive.Product.Suffix.Name : "NULL")
+                            </label>
+                        </div>
+                        <div>
+                            <label class="control-label">Quantity</label>
+                            <label class="form-control">@receive.Quantity</label>
+                        </div>
+                        <div>
+                            <label class="control-label">Remarks</label>
+                            <label class="form-control">@receive.Remarks</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="d-flex flex-row flex-wrap col-sm-12 col-md-6 p-0 m-0 align-self-start">
+                    <div class="col-12">
+                        <div>
+                            <label class="control-label">Received By</label>
+                            <label class="form-control">@receive.ReceiveBy</label>
+                        </div>
+                        <div>
+                            <label class="control-label">Receive Date</label>
+                            <label class="form-control">@receive.ReceiveDate.ToShortDateString()</label>
+                        </div>
+                        <div>
+                            <label class="control-label">Manufacture Date</label>
+                            <label class="form-control">@receive.ManufactureDate.ToShortDateString()</label>
+                        </div>
+                        <div>
+                            <label class="control-label">Expiry Date</label>
+                            <label class="form-control">@receive.ExpiryDate.ToShortDateString()</label>
+                        </div>
+                        <div>
+                            <label class="control-label">Note</label>
+                            <label class="form-control">@receive.Note</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center text-success">
+                <h3>Available Quantity :@avQty</h3>
+            </div>
+        }
+        else
+        {
+            <div class="text-center text-warning ">
+                <h3>There is no record!</h3>
+            </div>
+        }
+    </Card>
+}

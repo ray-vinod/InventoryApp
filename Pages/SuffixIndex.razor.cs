@@ -20,6 +20,7 @@ namespace InventoryApp.Pages
         public List<Suffix> suffixes;
         public bool spinnerOnOff = true;
         List<PageUrl> urls = new List<PageUrl>();
+        private bool isLock = false;
 
         [CascadingParameter] IModalService Modal { get; set; }
         [Inject] public SuffixService SuffixService { get; set; }
@@ -44,27 +45,32 @@ namespace InventoryApp.Pages
             await LoadData(PagingParameter.CurrentPage, null);
         }
 
-        public async void PageUpdateHandler(string property, Suffix suffix)
+        public async void PageUpdateHandler(Suffix suffix)
         {
             await InvokeAsync(async () =>
             {
-                foreach (var item in property.Split(",", StringSplitOptions.RemoveEmptyEntries))
+                if (suffix != null)
                 {
-                    if (item.Equals("suffix/index"))
+                    //find index and remove
+                    int index = suffixes.FindIndex(x => x.Id == suffix.Id);
+                    suffixes.RemoveAt(index);
+
+                    //find new update entity from db
+                    suffixes.Insert(index, suffix);
+
+                    NavigationManager.NavigateTo("/suffix/index", true);
+                }
+                else
+                {
+                    if (!isLock)
                     {
+                        while (isLock)
+                        {
+                            Logger.LogInformation("System is busy ...");
+                            await Task.Delay(100);
+                        }
+
                         await LoadData(PagingParameter.CurrentPage, null);
-                    }
-
-                    if(suffix !=null)
-                    {
-                        //find index and remove
-                        int index = suffixes.FindIndex(x=>x.Id==suffix.Id);
-                        suffixes.RemoveAt(index);
-
-                        //find new update entity from db
-                        suffixes.Insert(index,suffix);
-
-                        NavigationManager.NavigateTo("/suffix/index", true);
                     }
                 }
 
@@ -131,13 +137,14 @@ namespace InventoryApp.Pages
                     AlertService.AddMessage(new Alert(suffix.Name + AlertMessage.DeleteInfo,
                         AlertType.Error));
 
-                    UpdateService.UpdatePage("suffix/index", null);
+                    UpdateService.UpdatePage();
                 }
             }
         }
 
         private async Task CallData(int page, string searchText)
         {
+            isLock = true;
             suffixes.Clear();
             Logger.LogInformation("Prefix list is loading!");
 
@@ -166,6 +173,8 @@ namespace InventoryApp.Pages
                     StateHasChanged();
                 }
             }
+
+            isLock = false;
         }
 
         public void Dispose()

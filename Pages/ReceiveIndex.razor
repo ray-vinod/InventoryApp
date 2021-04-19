@@ -1,0 +1,52 @@
+﻿@page "/receive/index"
+@layout MainLayout
+@attribute [Authorize(Roles = "SuperAdmin,Admin")]
+
+<Title Value="Receive-index"></Title>
+
+<Card Title="List of all Recieve Iitem">
+    @if (!spinnerOnOff)
+    {
+        @*Top navigation section above the tablegrid*@
+        <div class="d-sm-flex d-flex flex-wrap">
+            <div>
+                <Button ButtonText="Add New"
+                    CssClass="btn-outline-info mb-4 ml-4"
+                    IconClass="oi-plus ml-2"
+                    LinkString="/receive/create" />
+
+                @if (PagingParameter.TotalPages != 0)
+                {
+                    <Button ButtonText="Download"
+                    CssClass="btn-outline-secondary mb-4 ml-4"
+                    IconClass="oi-arrow-circle-bottom ml-2"
+                    OnClick="Download" />
+                }
+            </div>
+
+            @if (PagingParameter.TotalPages != 0)
+            {
+                <div class="ml-auto mb-4 icon-container">
+                    <Searchbox OnSearchTexChanged="OnSearchTexChanged" />
+                </div>
+            }
+        </div>
+    } 
+    @*Tabel display data form generic type Tablecomponent*@
+    <Table Items="receivevm"
+           ColsToExcludeCSV="LifeSpan,IsUsed,Note"
+           CssClass="table-striped text-center"
+           ShowHideSpinner="spinnerOnOff"
+           RecordCount="PagingParameter.TotalPages"
+           LifeSpanComparator="90" PageUrls="pageUrlList" />
+
+    @if (PagingParameter.TotalPages != 0)
+    {
+        @*Buttom of the table pagination link using PaginationComponent*@
+        <PageLink CurrentPage="PagingParameter.CurrentPage"
+                TotalPage="PagingParameter.TotalPages"
+                SelectedPage="SelectedPage" />
+    }
+</Card>
+    
+    

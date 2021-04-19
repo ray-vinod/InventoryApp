@@ -79,7 +79,7 @@ namespace InventoryApp.Pages
                     AlertService.AddMessage(new Alert(suffix.Name + AlertMessage.AddInfo,
                         AlertType.Success));
 
-                    UpdateService.UpdatePage("suffix/index", null);
+                    UpdateService.UpdatePage();
                 }
 
                 getFocus = true;
@@ -104,7 +104,7 @@ namespace InventoryApp.Pages
                     AlertService.AddMessage(new Alert(suffix.Name + AlertMessage.UpdateInfo,
                         AlertType.Success));
 
-                    UpdateService.UpdatePage("suffix/update", isUpdate);
+                    UpdateService.UpdatePage(isUpdate);
 
                     NavigationManager.NavigateTo("/suffix/index", false);
                 }

@@ -17,7 +17,7 @@
                     }
 
                 </div>
-                @if (PaginationMetadata.TotalPages != 0)
+                @if (PagingParameter.TotalPages != 0)
                 {
                     <div class="ml-auto mb-2 icon-container">
                         <Searchbox OnSearchTexChanged="OnSearchTexChanged" />
@@ -52,9 +52,6 @@
                             <td>@stock.TotalIssueReturn</td>
                             <td>@stock.InStock</td>
                             <td>
-                                @* <a @onclick="@(()=> NavigationManager.NavigateTo("/stock/detail/"+stock.ProductId))" class="btn btn-outline-info">
-                                    <span class="oi oi-list mr-2"></span>Detail
-                                    </a>*@
                                 <a class="btn btn-outline-info">
                                     <span class="oi oi-list mr-2"></span>Detail
                                 </a>
@@ -71,11 +68,12 @@
             </div>
         }
 
-        @if (PaginationMetadata.TotalPages != 0)
+        @if (PagingParameter.TotalPages != 0)
         {
             @*Buttom of the table pagination link using PaginationComponent*@
-            <PagingLink CurrentPage="PaginationMetadata.CurrentPage" TotalPage="PaginationMetadata.TotalPages"
-                    SelectedPage="SelectedPage" />
+            <PageLink CurrentPage="PagingParameter.CurrentPage" 
+                TotalPage="PagingParameter.TotalPages"
+                SelectedPage="SelectedPage" />
         }
     </Card>
 </div>
