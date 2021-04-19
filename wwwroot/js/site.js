@@ -1,5 +1,4 @@
-﻿
-//js isolation
+﻿//js isolation
 export function showAlert(text) {
     alert(text);
 }

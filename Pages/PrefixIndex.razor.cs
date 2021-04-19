@@ -7,7 +7,6 @@ using InventoryApp.Models;
 using InventoryApp.Models.Enums;
 using InventoryApp.Services;
 using Microsoft.AspNetCore.Components;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -22,6 +21,7 @@ namespace InventoryApp.Pages
         public List<Prefix> prefixes;
         public bool spinnerOnOff = true;
         List<PageUrl> urls = new List<PageUrl>();
+        private bool isLock = false;
 
         [CascadingParameter] IModalService Modal { get; set; }
         [Inject] public PrefixService PrefixService { get; set; }
@@ -47,25 +47,30 @@ namespace InventoryApp.Pages
             await LoadData(PagingParameter.CurrentPage, null);
         }
 
-        public async void PageUpdateHandler(string property, Prefix prefix)
+        public async void PageUpdateHandler(Prefix prefix)
         {
             await InvokeAsync(async () =>
             {
-                foreach (var item in property.Split(",", StringSplitOptions.RemoveEmptyEntries))
+                if (prefix != null)
                 {
-                    if (item.Equals("prefix/index"))
+                    //find index of list and remove
+                    int index = prefixes.FindIndex(x => x.Id == prefix.Id);
+                    prefixes.RemoveAt(index);
+
+                    //find the updated entity and add to list at index
+                    prefixes.Insert(index, prefix);
+                }
+                else
+                {
+                    if(!isLock)
                     {
+                        while (isLock)
+                        {
+                            Logger.LogInformation("System is busy ...");
+                            await Task.Delay(100);
+                        }
+
                         await LoadData(PagingParameter.CurrentPage, null);
-                    }
-
-                    if (prefix != null)
-                    {
-                        //find index of list and remove
-                        int index = prefixes.FindIndex(x => x.Id == prefix.Id);
-                        prefixes.RemoveAt(index);
-
-                        //find the updated entity and add to list at index
-                        prefixes.Insert(index, prefix);
                     }
                 }
 
@@ -132,13 +137,14 @@ namespace InventoryApp.Pages
                     AlertService.AddMessage(new Alert(prefix.Name + AlertMessage.DeleteInfo,
                         AlertType.Error));
 
-                    UpdateService.UpdatePage("prefix/index", null);
+                    UpdateService.UpdatePage();
                 }
             }
         }
 
         private async Task CallData(int page, string searchText)
         {
+            isLock = true;
             prefixes.Clear();
             Logger.LogInformation("Prefix list is loading!");
 
@@ -167,6 +173,8 @@ namespace InventoryApp.Pages
                     StateHasChanged();
                 }
             }
+
+            isLock = false;
         }
 
         public void Dispose()

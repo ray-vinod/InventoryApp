@@ -13,14 +13,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
+
+
 namespace InventoryApp.Pages
 {
     public partial class ProductIndex : IDisposable
     {
-
         private List<ProductViewModel> products;
         List<PageUrl> urls;
         private bool spinnerOnOff = true;
+        private bool isLock = false;
 
         [CascadingParameter]
         IModalService Modal { get; set; }
@@ -41,6 +43,10 @@ namespace InventoryApp.Pages
         public NavigationManager NavigationManager { get; set; }
         [Inject]
         public UpdateService<Product> UpdateService { get; set; }
+        [Inject]
+        public UpdateService<Prefix> UpdateServicePrefix { get; set; }
+        [Inject]
+        public UpdateService<Suffix> UpdateServiceSuffix { get; set; }
 
 
 
@@ -55,29 +61,113 @@ namespace InventoryApp.Pages
             };
 
             UpdateService.OnUpdateRequested += PageUpdateHandler;
-
+            UpdateServicePrefix.OnUpdateRequested += PrefixUpdateHandler;
+            UpdateServiceSuffix.OnUpdateRequested += SuffixUpdateHandler;
 
             await LoadData(PagingParameter.CurrentPage, null);
 
         }
 
-        public async void PageUpdateHandler(string property, Product product)
+        public async void SuffixUpdateHandler(Suffix suffix)
         {
             await InvokeAsync(async () =>
             {
-                foreach (var item in property.Split(",", StringSplitOptions.RemoveEmptyEntries))
+                if (suffix != null)
                 {
-                    if (item.Equals("product/index"))
-                    {
-                        await LoadData(PagingParameter.CurrentPage, null);
-                    }
-                    
-                    if(product != null)
-                    {
-                        int index = products.FindIndex(x=>x.Id==product.Id);
-                        products.RemoveAt(index);
+                    var listvm = new List<ProductViewModel>();
 
-                        products.Insert(index,product);
+                    foreach (var product in products)
+                    {
+                        var item = await ProductService.GetItemsAsync(
+                            filter: x => x.Id == product.Id,
+                            includeProperties: "Prefix,Suffix");
+
+                        if (item.First().SuffixId != null && item.First().SuffixId == suffix.Id)
+                        {
+                            var vm = new ProductViewModel
+                            {
+                                Id = product.Id,
+                                Name = item.FirstOrDefault().Prefix?.Name + " " +
+                                item.FirstOrDefault().Name + " " +
+                                suffix.Name,
+                                Group = $"{item.FirstOrDefault().GroupName}",
+                            };
+
+                            listvm.Add(vm);
+                        }
+                        else
+                            listvm.Add(product);
+                    }
+
+                    products.Clear();
+                    products.AddRange(listvm);
+                }
+
+                StateHasChanged();
+            });
+        }
+
+        public async void PrefixUpdateHandler(Prefix prefix)
+        {
+            await InvokeAsync(async () =>
+            {
+                if (prefix != null)
+                {
+                    var listvm = new List<ProductViewModel>();
+
+                    foreach (var product in products)
+                    {
+                        var item = await ProductService.GetItemsAsync(
+                            filter: x => x.Id == product.Id,
+                            includeProperties: "Prefix,Suffix");
+
+                        if (item.First().PrefixId != null && item.First().PrefixId == prefix.Id)
+                        {
+                            var vm = new ProductViewModel
+                            {
+                                Id = product.Id,
+                                Name = prefix.Name + " " +
+                                item.FirstOrDefault().Name + " " +
+                                item.FirstOrDefault().Suffix?.Name,
+                                Group = $"{item.FirstOrDefault().GroupName}",
+                            };
+
+                            listvm.Add(vm);
+                        }
+                        else
+                            listvm.Add(product);
+                    }
+
+                    products.Clear();
+                    products.AddRange(listvm);
+                }
+
+                StateHasChanged();
+            });
+        }
+
+        public async void PageUpdateHandler(Product product)
+        {
+            await InvokeAsync(async () =>
+            {
+                if (product != null)
+                {
+                    int index = products.FindIndex(x => x.Id == product.Id);
+                    products.RemoveAt(index);
+
+                    products.Insert(index, product);
+                }
+                else
+                {
+                    if (!isLock)
+                    {
+                        while (isLock)
+                        {
+                            Logger.LogInformation("System is busy ...");
+                            await Task.Delay(100);
+                        }
+
+                        await LoadData(PagingParameter.CurrentPage, null);
                     }
                 }
 
@@ -123,6 +213,7 @@ namespace InventoryApp.Pages
 
         private async Task CallData(int page, string searchText)
         {
+            isLock = true;
             products.Clear();
 
             if (searchText != null)
@@ -152,6 +243,7 @@ namespace InventoryApp.Pages
             }
 
             Logger.LogInformation("Loading records");
+            isLock = false;
         }
 
         private async Task Delete(Guid id)
@@ -191,15 +283,16 @@ namespace InventoryApp.Pages
                     AlertService.AddMessage(new Alert(product.Name + AlertMessage.DeleteInfo,
                         AlertType.Error));
 
-                    UpdateService.UpdatePage("product/index", null);
+                    UpdateService.UpdatePage();
                 }
             }
         }
 
         public void Dispose()
         {
-            UpdateService.OnUpdateRequested += PageUpdateHandler;
+            UpdateService.OnUpdateRequested -= PageUpdateHandler;
+            UpdateServicePrefix.OnUpdateRequested -= PrefixUpdateHandler;
+            UpdateServiceSuffix.OnUpdateRequested -= SuffixUpdateHandler;
         }
-
     }
 }

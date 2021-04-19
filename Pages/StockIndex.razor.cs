@@ -19,6 +19,7 @@ namespace InventoryApp.Pages
         public List<PageUrl> pageUrlList;
         public bool spinnerOnOff = true;
         public IJSObjectReference jsModule;
+        private bool isLock = false;
 
         [Inject]
         AlertService AlertService { get; set; }
@@ -51,29 +52,35 @@ namespace InventoryApp.Pages
             await LoadData(PagingParameter.CurrentPage, null);
         }
 
-        private async void ProductStockUpdateHandler(string url, Product product)
+        private async void ProductStockUpdateHandler(Product product)
         {
             await InvokeAsync(async () =>
             {
-                await LoadData(PagingParameter.CurrentPage, null);
+                if (isLock)
+                    await LoadData(PagingParameter.CurrentPage, null);
+
                 StateHasChanged();
             });
         }
 
-        private async void ReceiveStockUpdateHandler(string url, Receive receive)
+        private async void ReceiveStockUpdateHandler(Receive receive)
         {
             await InvokeAsync(async () =>
             {
-                await LoadData(PagingParameter.CurrentPage, null);
+                if (isLock)
+                    await LoadData(PagingParameter.CurrentPage, null);
+
                 StateHasChanged();
             });
         }
 
-        private async void IssueStockUpdateHandler(string url, Issue issue)
+        private async void IssueStockUpdateHandler(Issue issue)
         {
             await InvokeAsync(async () =>
             {
-                await LoadData(PagingParameter.CurrentPage, null);
+                if (isLock)
+                    await LoadData(PagingParameter.CurrentPage, null);
+
                 StateHasChanged();
             });
         }
@@ -102,6 +109,7 @@ namespace InventoryApp.Pages
 
         private async Task CallData(int page, string searchText)
         {
+            isLock = true;
             stocks.Clear();
             if (searchText != null)
             {
@@ -130,6 +138,7 @@ namespace InventoryApp.Pages
                     StateHasChanged();
                 }
             }
+            isLock = false;
         }
 
         //EventCallback for paging navigation link
@@ -163,7 +172,6 @@ namespace InventoryApp.Pages
             ProductUpdateService.OnUpdateRequested -= ProductStockUpdateHandler;
             ReceiveUpdateService.OnUpdateRequested += ReceiveStockUpdateHandler;
             IssueUpdateService.OnUpdateRequested += IssueStockUpdateHandler;
-
         }
     }
 }

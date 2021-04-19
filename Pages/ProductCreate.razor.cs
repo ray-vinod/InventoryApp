@@ -12,7 +12,6 @@ namespace InventoryApp.Pages
 {
     public partial class ProductCreate : IDisposable
     {
-
         public List<Prefix> prefixes;
         public List<Suffix> suffixes;
         public List<string> products;
@@ -20,6 +19,7 @@ namespace InventoryApp.Pages
         public ElementReference firstInput;
         public bool getFocus = false;
         public string title = "Product-create";
+        private bool isLock = false;
 
         [Parameter] public Guid Id { get; set; }
 
@@ -67,51 +67,61 @@ namespace InventoryApp.Pages
             }
         }
 
-        public async void PrefixUpdateHandler(string property, Prefix prefix)
+        public async void PrefixUpdateHandler(Prefix prefix)
         {
             await InvokeAsync(async () =>
             {
-                foreach (var item in property.Split(",", StringSplitOptions.RemoveEmptyEntries))
+                if (prefix != null)
                 {
-                    if (item.Equals("prefix/index"))
+                    //find index of list and remove
+                    int index = prefixes.FindIndex(x => x.Id == prefix.Id);
+                    prefixes.RemoveAt(index);
+
+                    //find the updated entity and add to list at index
+                    prefixes.Insert(index, prefix);
+                }
+                else
+                {
+                    if (!isLock)
                     {
+                        while (isLock)
+                        {
+                            Logger.LogInformation("System is busy ...");
+                            await Task.Delay(100);
+                        }
+
                         await LoadPrefix();
-                    }
-
-                    if (prefix != null)
-                    {
-                        //find index of list and remove
-                        int index = prefixes.FindIndex(x => x.Id == prefix.Id);
-                        prefixes.RemoveAt(index);
-
-                        //find the updated entity and add to list at index
-                        prefixes.Insert(index, prefix);
                     }
                 }
 
-               StateHasChanged();
+                StateHasChanged();
             });
         }
 
-        public async void SuffixUpdateHandler(string property, Suffix suffix)
+        public async void SuffixUpdateHandler(Suffix suffix)
         {
             await InvokeAsync(async () =>
             {
-                foreach (var item in property.Split(",", StringSplitOptions.RemoveEmptyEntries))
+                if (suffix != null)
                 {
-                    if (item.Equals("suffix/index"))
+                    //find index of list and remove
+                    int index = suffixes.FindIndex(x => x.Id == suffix.Id);
+                    suffixes.RemoveAt(index);
+
+                    //find the updated entity and add to list at index
+                    suffixes.Insert(index, suffix);
+                }
+                else
+                {
+                    if (!isLock)
                     {
+                        while (isLock)
+                        {
+                            Logger.LogInformation("System is busy ...");
+                            await Task.Delay(100);
+                        }
+
                         await LoadSuffix();
-                    }
-
-                    if (suffix != null)
-                    {
-                        //find index of list and remove
-                        int index = suffixes.FindIndex(x => x.Id == suffix.Id);
-                        suffixes.RemoveAt(index);
-
-                        //find the updated entity and add to list at index
-                        suffixes.Insert(index, suffix);
                     }
                 }
 
@@ -168,7 +178,7 @@ namespace InventoryApp.Pages
                     AlertService.AddMessage(new Alert(product.Name + AlertMessage.AddInfo,
                         AlertType.Success));
 
-                    UpdateService.UpdatePage("product/index", null);
+                    UpdateService.UpdatePage();
 
                     getFocus = true;
                     product = new Product();
@@ -204,8 +214,8 @@ namespace InventoryApp.Pages
                         AlertService.AddMessage(new Alert(product.Name + AlertMessage.UpdateInfo,
                             AlertType.Success));
 
-                        UpdateService.UpdatePage("product/update", isUpdated);
-                        NavigationManager.NavigateTo("/product/index",false);
+                        UpdateService.UpdatePage(isUpdated);
+                        NavigationManager.NavigateTo("/product/index", false);
                     }
                     else
                     {
@@ -224,22 +234,28 @@ namespace InventoryApp.Pages
 
         private async Task LoadSuffix()
         {
+            isLock = true;
             suffixes = (List<Suffix>)await SuffixService.GetItemsAsync();
 
             if (suffixes.Any())
             {
                 suffixes.OrderBy(x => x.Name);
             }
+
+            isLock = false;
         }
 
         private async Task LoadPrefix()
         {
+            isLock = true;
             prefixes = (List<Prefix>)await PrefixService.GetItemsAsync();
 
             if (prefixes.Any())
             {
                 prefixes.OrderBy(x => x.Name);
             }
+
+            isLock = false;
         }
 
         //Prefix Search function
