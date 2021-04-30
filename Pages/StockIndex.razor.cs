@@ -28,15 +28,9 @@ namespace InventoryApp.Pages
         [Inject]
         private IJSRuntime JSRuntime { get; set; }
         [Inject]
-        private NavigationManager NavigationManager { get; set; }
-        [Inject]
         private ILogger<StockIndex> Logger { get; set; }
         [Inject]
-        public UpdateService<Product> ProductUpdateService { get; set; }
-        [Inject]
-        public UpdateService<Receive> ReceiveUpdateService { get; set; }
-        [Inject]
-        public UpdateService<Issue> IssueUpdateService { get; set; }
+        public UpdateService<UpdateModel> UpdateService { get; set; }
 
 
 
@@ -45,41 +39,25 @@ namespace InventoryApp.Pages
             stocks = new List<Stock>();
             pageUrlList = new List<PageUrl>();
 
-            ProductUpdateService.OnUpdateRequested += ProductStockUpdateHandler;
-            ReceiveUpdateService.OnUpdateRequested += ReceiveStockUpdateHandler;
-            IssueUpdateService.OnUpdateRequested += IssueStockUpdateHandler;
+            UpdateService.OnUpdateRequested += PageUpdateHandler;
 
             await LoadData(PagingParameter.CurrentPage, null);
         }
 
-        private async void ProductStockUpdateHandler(Product product)
+        private async void PageUpdateHandler(string property, UpdateModel model)
         {
             await InvokeAsync(async () =>
             {
-                if (isLock)
+                if (!isLock)
+                {
+                    while (isLock)
+                    {
+                        Logger.LogInformation("System is busy ...");
+                        await Task.Delay(100);
+                    }
+
                     await LoadData(PagingParameter.CurrentPage, null);
-
-                StateHasChanged();
-            });
-        }
-
-        private async void ReceiveStockUpdateHandler(Receive receive)
-        {
-            await InvokeAsync(async () =>
-            {
-                if (isLock)
-                    await LoadData(PagingParameter.CurrentPage, null);
-
-                StateHasChanged();
-            });
-        }
-
-        private async void IssueStockUpdateHandler(Issue issue)
-        {
-            await InvokeAsync(async () =>
-            {
-                if (isLock)
-                    await LoadData(PagingParameter.CurrentPage, null);
+                }
 
                 StateHasChanged();
             });
@@ -88,6 +66,7 @@ namespace InventoryApp.Pages
         private async Task LoadData(int page, string searchText)
         {
             await CallData(page, searchText);
+
             PagingParameter.TotalPages = StockService.PageCount();
             if (PagingParameter.TotalPages == 0)
             {
@@ -111,14 +90,17 @@ namespace InventoryApp.Pages
         {
             isLock = true;
             stocks.Clear();
+
+            await Task.Delay(100);
+
             if (searchText != null)
             {
                 await foreach (var item in StockService.StreamListAsync(
-                page,
-                PagingParameter.PageSize,
-                filter: x => x.Product.Name.Contains(searchText),
-                orderBy: o => o.OrderBy(x => x.Product.Name),
-                includeProperties: "Product,Product.Prefix,Product.Suffix"))
+                    page,
+                    PagingParameter.PageSize,
+                    filter: x => x.Product.Name.Contains(searchText),
+                    orderBy: o => o.OrderBy(x => x.Product.Name),
+                    includeProperties: "Product,Product.Prefix,Product.Suffix"))
                 {
                     stocks.Add(item);
                     spinnerOnOff = false;
@@ -128,16 +110,17 @@ namespace InventoryApp.Pages
             else
             {
                 await foreach (var item in StockService.StreamListAsync(
-                page,
-                PagingParameter.PageSize,
-                orderBy: o => o.OrderBy(x => x.Product.Name),
-                includeProperties: "Product,Product.Prefix,Product.Suffix"))
+                    page,
+                    PagingParameter.PageSize,
+                    orderBy: o => o.OrderBy(x => x.Product.Name),
+                    includeProperties: "Product,Product.Prefix,Product.Suffix"))
                 {
                     stocks.Add(item);
                     spinnerOnOff = false;
                     StateHasChanged();
                 }
             }
+
             isLock = false;
         }
 
@@ -162,16 +145,9 @@ namespace InventoryApp.Pages
             await jsModule.InvokeVoidAsync("saveAsFile", "Inventory Report.xlsx", Convert.ToBase64String(fileContent));
         }
 
-        private async Task Detail(Guid id)
-        {
-            await Task.Delay(0);
-        }
-
         public void Dispose()
         {
-            ProductUpdateService.OnUpdateRequested -= ProductStockUpdateHandler;
-            ReceiveUpdateService.OnUpdateRequested += ReceiveStockUpdateHandler;
-            IssueUpdateService.OnUpdateRequested += IssueStockUpdateHandler;
+            UpdateService.OnUpdateRequested -= PageUpdateHandler;
         }
     }
 }

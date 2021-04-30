@@ -26,13 +26,15 @@ namespace InventoryApp.Pages
         [Inject]
         private AlertService AlertService { get; set; }
         [Inject]
-        private UpdateService<Receive> ReceiveReUpdateService { get; set; }
+        private UpdateService<UpdateModel> UpdateService { get; set; }
         [Inject]
         private ReceiveService ReceiveService { get; set; }
         [Inject]
         private IJSRuntime JSRuntime { get; set; }
         [Inject]
         private ILogger<ReceiveIndex> Logger { get; set; }
+        [Inject]
+        public NavigationManager NavigationManager { get; set; }
 
 
 
@@ -46,35 +48,49 @@ namespace InventoryApp.Pages
                 new PageUrl("receive/detail/", "Open", "oi-external-link", "btn-outline-info ml-2")
             };
 
-            ReceiveReUpdateService.OnUpdateRequested += PageUpdateHandler;
+            UpdateService.OnUpdateRequested += PageUpdateHandler;
 
             await LoadData(PagingParameter.CurrentPage, null);
         }
 
-        private async void PageUpdateHandler(Receive receive)
+        private async void PageUpdateHandler(string property, UpdateModel model)
         {
             await InvokeAsync(async () =>
             {
-                if (receive != null)
+                if (model != null)
                 {
-                    //find index of list and remove
-                    int index = receivevm.FindIndex(x => x.Id == receive.Id);
-                    receivevm.RemoveAt(index);
+                    if (model.Prefix != null)
+                        NavigationManager.NavigateTo("/receive/index", true);
 
-                    //find the updated entity and add to list at index
-                    receivevm.Insert(index, receive);
+                    if (model.Suffix != null)
+                        NavigationManager.NavigateTo("/receive/index", true);
+
+                    if (model.Receive != null)
+                    {
+                        int index = receivevm.FindIndex(x => x.Id == model.Receive.Id);
+                        receivevm.RemoveAt(index);
+                        receivevm.Insert(index, model.Receive);
+                    }
                 }
                 else
                 {
-                    if (isLock)
+                    if (property != null)
                     {
-                        while (isLock)
+                        foreach (var load in property.Split(new char[] { ',' },
+                            StringSplitOptions.RemoveEmptyEntries))
                         {
-                            Logger.LogInformation("System is busy ...");
-                            await Task.Delay(100);
-                        }
+                            if (!isLock)
+                            {
+                                while (isLock)
+                                {
+                                    Logger.LogInformation("System is busy ...");
+                                    await Task.Delay(100);
+                                }
 
-                        await LoadData(PagingParameter.CurrentPage, null);
+                                if (load == "receive/index")
+                                    await LoadData(PagingParameter.CurrentPage, null);
+                            }
+                        }
                     }
                 }
 
@@ -174,7 +190,7 @@ namespace InventoryApp.Pages
 
         public void Dispose()
         {
-            ReceiveReUpdateService.OnUpdateRequested -= PageUpdateHandler;
+            UpdateService.OnUpdateRequested -= PageUpdateHandler;
         }
     }
 }

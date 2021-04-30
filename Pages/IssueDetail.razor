@@ -1,0 +1,87 @@
+﻿@page "/issue/detail"
+@page "/issue/detail/{id:guid}"
+@layout MainLayout
+@attribute [Authorize(Roles = "SuperAdmin,Admin")]
+
+<Title Value="@title"></Title>
+
+@if (load)
+{
+    <Card Title="Issue Item Detail">
+        <Button ButtonText="Back To List" CssClass="btn-outline-secondary mb-4 ml-4"
+            IconClass="oi-arrow-circle-left ml-2" LinkString="/issue/index" />
+
+        @if (issue != null)
+        {
+            if (issue.Note == null && issue.IsDelete != true && issue.IsUse != true)
+            {
+                if (issue.Quantity != issue.ReturnQty)
+                {
+                    <Button ButtonText="Cancel Entry" CssClass="btn-outline-primary mb-4 ml-4" IconClass="oi-action-undo ml-2"
+                            OnClick="CancellationRequest" />
+
+                    <Button ButtonText="Return" CssClass="btn-outline-info mb-4 ml-4" IconClass="oi-arrow-circle-top ml-2"
+                            LinkString="@($"/issue/return/{issue.Id}")" />
+                }
+            }
+
+            <div class="d-flex flex-sm-column flex-md-row flex-wrap p-0 m-0 align-items-center justify-content-between ">
+                <div class="d-flex flex-row flex-wrap col-sm-12 col-md-6 p-0 m-0 align-self-start">
+                    <div class="col-12">
+                        <div>
+                            <label class="control-label">Prefix</label>
+                            <label class="form-control">
+                                @issue.Product.Prefix?.Name
+                            </label>
+                        </div>
+                        <div>
+                            <label class="control-label">Product Name</label>
+                            <label class="form-control">@issue.Product.Name</label>
+                        </div>
+                        <div>
+                            <label class="control-label">Suffix</label>
+                            <label class="form-control">
+                                @issue.Product.Suffix?.Name
+                            </label>
+                        </div>
+                        <div>
+                            <label class="control-label">Quantity</label>
+                            <label class="form-control">@issue.Quantity</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="d-flex flex-row flex-wrap col-sm-12 col-md-6 p-0 m-0 align-self-start">
+                    <div class="col-12">
+                        <div>
+                            <label class="control-label">Received By</label>
+                            <label class="form-control">@issue.IssueBy</label>
+                        </div>
+                        <div>
+                            <label class="control-label">Receive Date</label>
+                            <label class="form-control">@issue.IssueDate.ToShortDateString()</label>
+                        </div>
+                        <div>
+                            <label class="control-label">Note</label>
+                            <label class="form-control">@issue.Note</label>
+                        </div>
+                        <div>
+                            <label class="control-label">Remarks</label>
+                            <label class="form-control">@issue.Remarks</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center text-success">
+                <h3>You can return : @avQty</h3>
+            </div>
+        }
+        else
+        {
+            <div class="text-center text-warning ">
+                <h3>There is no record!</h3>
+            </div>
+        }
+    </Card>
+}
+

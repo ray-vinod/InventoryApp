@@ -56,11 +56,7 @@ namespace InventoryApp
 
             services.AddSingleton<AlertService>();
             services.AddSingleton<IndexRefreshService>();
-            services.AddSingleton<UpdateService<Prefix>>();
-            services.AddSingleton<UpdateService<Suffix>>();
-            services.AddSingleton<UpdateService<Product>>();
-            services.AddSingleton<UpdateService<Receive>>();
-            services.AddSingleton<UpdateService<Issue>>();
+            services.AddSingleton<UpdateService<UpdateModel>>();
 
             services.AddScoped<UserStateService>(); //Update User information who have logged in.
 
@@ -73,7 +69,8 @@ namespace InventoryApp
             services.AddTransient<StockService>();
             services.AddTransient<ReceiveService>();
             services.AddTransient<PurchaseReturnService>();
-
+            services.AddTransient<IssueService>();
+            services.AddTransient<SaleReturnService>();
 
 
         }

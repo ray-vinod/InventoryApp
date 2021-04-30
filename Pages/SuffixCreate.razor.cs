@@ -24,7 +24,7 @@ namespace InventoryApp.Pages
         [Inject] public AlertService AlertService { get; set; }
         [Inject] public SuffixService SuffixService { get; set; }
         [Inject] public ILogger<SuffixCreate> Logger { get; set; }
-        [Inject] public UpdateService<Suffix> UpdateService { get; set; }
+        [Inject] public UpdateService<UpdateModel> UpdateService { get; set; }
 
 
         protected override void OnInitialized()
@@ -79,7 +79,7 @@ namespace InventoryApp.Pages
                     AlertService.AddMessage(new Alert(suffix.Name + AlertMessage.AddInfo,
                         AlertType.Success));
 
-                    UpdateService.UpdatePage();
+                    UpdateService.UpdatePage("suffix/index");
                 }
 
                 getFocus = true;
@@ -104,7 +104,7 @@ namespace InventoryApp.Pages
                     AlertService.AddMessage(new Alert(suffix.Name + AlertMessage.UpdateInfo,
                         AlertType.Success));
 
-                    UpdateService.UpdatePage(isUpdate);
+                    UpdateService.UpdatePage(entity:new UpdateModel { Suffix=isUpdate});
 
                     NavigationManager.NavigateTo("/suffix/index", false);
                 }

@@ -6,16 +6,14 @@
     <Card Title="List of Stock">
         @if (!spinnerOnOff)
         {
-
             @*Top navigation section above the tablegrid*@
             <div class="d-sm-flex d-flex flex-wrap">
                 <div>
                     @if (stocks.Count > 0)
                     {
                         <Button ButtonText="Download" CssClass="btn-outline-secondary mb-2"
-                                IconClass="oi-arrow-circle-bottom mr-2" OnClick="Download" />
+                        IconClass="oi-arrow-circle-bottom mr-2" OnClick="Download" />
                     }
-
                 </div>
                 @if (PagingParameter.TotalPages != 0)
                 {
@@ -71,9 +69,9 @@
         @if (PagingParameter.TotalPages != 0)
         {
             @*Buttom of the table pagination link using PaginationComponent*@
-            <PageLink CurrentPage="PagingParameter.CurrentPage" 
-                TotalPage="PagingParameter.TotalPages"
-                SelectedPage="SelectedPage" />
+            <PageLink CurrentPage="PagingParameter.CurrentPage"
+                  TotalPage="PagingParameter.TotalPages"
+                  SelectedPage="SelectedPage" />
         }
     </Card>
 </div>

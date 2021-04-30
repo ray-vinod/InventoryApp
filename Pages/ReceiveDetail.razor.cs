@@ -10,36 +10,34 @@ using System;
 using System.Threading.Tasks;
 
 
+
 namespace InventoryApp.Pages
 {
-    public partial class ReceiveDetail : ComponentBase
+    public partial class ReceiveDetail
     {
-
         public Receive receive;
         public bool load = false;
         int lifeSpan = 0;
         int avQty = 0;
 
-        [Parameter] public Guid Id { get; set; }
+        [Parameter]
+        public Guid Id { get; set; }
 
-        [Inject] public ReceiveService ReceiveService { get; set; }
-        [Inject] public NavigationManager NavigationManager { get; set; }
-        [Inject] public AlertService AlertService { get; set; }
-        [Inject] private ILogger<ReceiveDetail> Logger { get; set; }
-        [Inject] public UpdateService<Receive> UpdateServiceIssue { get; set; }
+        [Inject]
+        private ReceiveService ReceiveService { get; set; }
+        [Inject]
+        private NavigationManager NavigationManager { get; set; }
+        [CascadingParameter]
+        private IModalService Modal { get; set; }
+        [Inject]
+        public AlertService AlertService { get; set; }
+        [Inject]
+        private ILogger<ReceiveDetail> Logger { get; set; }
 
-        [CascadingParameter] private IModalService Modal { get; set; }
 
-
-
-        protected override void OnInitialized()
+        protected override async Task OnInitializedAsync()
         {
             receive = new Receive();
-
-        }
-
-        protected override async Task OnParametersSetAsync()
-        {
             if (Id != Guid.Empty)
             {
                 receive = await ReceiveService.GetByIdAsync(Id);
@@ -58,6 +56,7 @@ namespace InventoryApp.Pages
                 load = true;
                 receive.IsUse = true;
             }
+
         }
 
         //Request for remove from list which is aproved by the authorize person
@@ -82,7 +81,7 @@ namespace InventoryApp.Pages
             var result = await fromMessage.Result;
             if (!result.Cancelled)
             {
-                //Update Note Field for receive item and send to admin for the action
+                //Update Note Field for receive item and sendi to admin for the action
                 receive.Note = result.Data.ToString().ToUpper();
                 var isUpdateEntity = await ReceiveService.UpdateAsync(receive);
 
@@ -93,7 +92,6 @@ namespace InventoryApp.Pages
                     AlertService.AddMessage(new Alert("Request for cancel entry has been sent!",
                         AlertType.Info));
 
-                    UpdateServiceIssue.UpdatePage(isUpdateEntity);
                     NavigationManager.NavigateTo("/receive/index", false);
                 }
             }
