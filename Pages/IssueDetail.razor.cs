@@ -24,14 +24,15 @@ namespace InventoryApp.Pages
         [CascadingParameter]
         private IModalService Modal { get; set; }
         [Inject]
-        public AlertService AlertService { get; set; }
+        private AlertService AlertService { get; set; }
         [Inject]
         private ILogger<ReceiveDetail> Logger { get; set; }
         [Inject]
         private IssueService IssueService { get; set; }
         [Inject]
         private NavigationManager NavigationManager { get; set; }
-
+        [Inject]
+        private UpdateService<UpdateModel> UpdateService { get; set; }
 
 
 
@@ -55,14 +56,14 @@ namespace InventoryApp.Pages
             {
                 load = true;
             }
-
         }
 
         private async Task CancellationRequest()
         {
             var parameters = new ModalParameters();
 
-            parameters.Add(nameof(DeleteConfirmModal.Message), $"{issue.Product.Prefix?.Name } {issue.Product.Name}" +
+            parameters.Add(nameof(DeleteConfirmModal.Message), $"{issue.Product.Prefix?.Name } " +
+                                                    $"{issue.Product.Name}" +
                                                     $"{issue.Product.Suffix?.Name}");
             parameters.Add(nameof(DeleteConfirmModal.ShowInput), true);
 
@@ -87,6 +88,8 @@ namespace InventoryApp.Pages
 
                     AlertService.AddMessage(new Alert("Request for cancel entry has been sent!",
                         AlertType.Info));
+
+                    UpdateService.UpdatePage();
 
                     NavigationManager.NavigateTo("/issue/index", true);
                 }

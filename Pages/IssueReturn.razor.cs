@@ -17,6 +17,7 @@ namespace InventoryApp.Pages
         public List<SaleReturnViewModel> saleReturnsvm;
         public bool spinnerOnOff = true;
         public IJSObjectReference jsModule;
+        public bool isLock = false;
 
         [Inject]
         public UpdateService<UpdateModel> UpdateService { get; set; }
@@ -42,7 +43,19 @@ namespace InventoryApp.Pages
         {
             await InvokeAsync(async () =>
             {
-                await LoadData(PagingParameter.CurrentPage, null);
+                if (model.SaleReturn != null)
+                {
+                    if (!isLock)
+                    {
+                        while (isLock)
+                        {
+                            await Task.Delay(100);
+                        }
+
+                        await LoadData(PagingParameter.CurrentPage, null);
+                    }
+                }
+
                 StateHasChanged();
             });
         }
@@ -84,6 +97,7 @@ namespace InventoryApp.Pages
 
         private async Task CallData(int page, string searchText)
         {
+            isLock = true;
             saleReturnsvm.Clear();
 
             if (searchText != null)
@@ -93,7 +107,7 @@ namespace InventoryApp.Pages
                     PagingParameter.PageSize,
                     filter: x => x.Product.Name.Contains(searchText),
                     orderBy: o => o.OrderByDescending(x => x.ReturnDate),
-                    includeProperties: "Product,Product.Prefix,Product.Sufffix"))
+                    includeProperties: "Product,Product.Prefix,Product.Suffix"))
                 {
                     var vm = new SaleReturnViewModel
                     {
@@ -115,12 +129,13 @@ namespace InventoryApp.Pages
                     page,
                     PagingParameter.PageSize,
                     orderBy: o => o.OrderByDescending(x => x.ReturnDate),
-                    includeProperties: "Product,Product.Prefix,Product.Sufffix"))
+                    includeProperties: "Product,Product.Prefix,Product.Suffix"))
                 {
                     var vm = new SaleReturnViewModel
                     {
                         Return_Date = item.ReturnDate.ToShortDateString(),
-                        Name = $"{item.Product.Prefix?.Name} {item.Product.Name} {item.Product.Suffix?.Name}",
+                        Name = $"{item.Product.Prefix?.Name} {item.Product.Name} " +
+                               $"{item.Product.Suffix?.Name}",
                         Qty = item.Quantity,
                         Retrun_By = item.ReturneBy,
                         Remarks = item.Remarks,
@@ -131,6 +146,8 @@ namespace InventoryApp.Pages
                     StateHasChanged();
                 }
             }
+
+            isLock = false;
         }
 
         private async Task Download()

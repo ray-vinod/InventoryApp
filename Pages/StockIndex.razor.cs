@@ -30,6 +30,8 @@ namespace InventoryApp.Pages
         [Inject]
         private ILogger<StockIndex> Logger { get; set; }
         [Inject]
+        public NavigationManager NavigationManager { get; set; }
+        [Inject]
         public UpdateService<UpdateModel> UpdateService { get; set; }
 
 
@@ -48,15 +50,50 @@ namespace InventoryApp.Pages
         {
             await InvokeAsync(async () =>
             {
-                if (!isLock)
+                if (model != null)
                 {
-                    while (isLock)
+                    if (model.Prefix != null)
+                        NavigationManager.NavigateTo("/receive/index", true);
+
+                    if (model.Suffix != null)
+                        NavigationManager.NavigateTo("/receive/index", true);
+
+                    if (model.SaleReturn != null)
                     {
-                        Logger.LogInformation("System is busy ...");
-                        await Task.Delay(100);
+                        int index = stocks.FindIndex(x => x.Id == model.SaleReturn.ProductId);
+                        var stock = stocks.Find(x => x.Id == model.SaleReturn.ProductId);
+
+                        stock.TotalIssueReturn += model.SaleReturn.Quantity;
+                        stock.InStock += model.SaleReturn.Quantity;
+
+                        stocks.RemoveAt(index);
+                        stocks.Insert(index, stock);
                     }
 
-                    await LoadData(PagingParameter.CurrentPage, null);
+                    if (model.Issue != null)
+                    {
+                        int index = stocks.FindIndex(x => x.Id == model.Issue.ProductId);
+                        var stock = stocks.Find(x => x.Id == model.Issue.ProductId);
+
+                        stock.TotalIssue += model.Issue.Quantity;
+                        stock.InStock -= model.Issue.Quantity;
+
+                        stocks.RemoveAt(index);
+                        stocks.Insert(index, stock);
+                    }
+                }
+                else
+                {
+                    if (!isLock)
+                    {
+                        while (isLock)
+                        {
+                            Logger.LogInformation("System is busy ...");
+                            await Task.Delay(100);
+                        }
+
+                        await LoadData(PagingParameter.CurrentPage, null);
+                    }
                 }
 
                 StateHasChanged();

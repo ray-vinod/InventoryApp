@@ -56,7 +56,6 @@ namespace InventoryApp.Pages
                 load = true;
                 receive.IsUse = true;
             }
-
         }
 
         //Request for remove from list which is aproved by the authorize person

@@ -33,9 +33,8 @@ namespace InventoryApp.Services
                 .Select(x => new SaleReturnViewModel
                 {
                     Return_Date = x.ReturnDate.ToShortDateString(),
-                    Name = string.Concat((x.Product.Prefix != null) ? x.Product.Prefix.Name : null, " ",
-                                                    x.Product.Name, " ",
-                                               (x.Product.Suffix != null) ? x.Product.Suffix.Name : null),
+                    Name = string.Concat((x.Product.Prefix != null) ? x.Product.Prefix.Name : null, " ", x.Product.Name, " ",
+                                         (x.Product.Suffix != null) ? x.Product.Suffix.Name : null),
                     Qty = x.Quantity,
                     Retrun_By = x.ReturneBy,
                     Remarks = x.Remarks,

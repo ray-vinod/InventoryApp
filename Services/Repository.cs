@@ -100,7 +100,6 @@ namespace InventoryApp.Serviceses
             Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>> orderBy = null,
             string includeProperties = "")
         {
-
             // Get the dbSet from the Entity passed in                
             IQueryable<TEntity> query = dbSet;
 
@@ -136,7 +135,6 @@ namespace InventoryApp.Serviceses
             {
                 yield return item;
             }
-
         }
 
         public async Task<TEntity> UpdateAsync(TEntity entity)

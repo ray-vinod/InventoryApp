@@ -230,7 +230,7 @@ namespace InventoryApp.Pages
             AlertService.AddMessage(new Alert("Task completed successfully!", AlertType.Info));
             await LoadData(PagingParameter.CurrentPage);
         }
-        
+
         public void Dispose()
         {
             UpdateService.OnUpdateRequested -= PageUpdateHandler;

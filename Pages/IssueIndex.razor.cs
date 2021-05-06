@@ -1,6 +1,4 @@
-using Blazored.Modal;
 using Blazored.Modal.Services;
-using InventoryApp.Components;
 using InventoryApp.Helpers;
 using InventoryApp.Models;
 using InventoryApp.Models.Enums;
@@ -23,6 +21,7 @@ namespace InventoryApp.Pages
         public List<PageUrl> pageUrlList;
         public IJSObjectReference jsModule;
         public string title = "Issue-index";
+        private bool isLock = false;
 
         [Parameter]
         public Guid Id { get; set; }
@@ -57,20 +56,43 @@ namespace InventoryApp.Pages
             await LoadData(PagingParameter.CurrentPage, null);
         }
 
-        protected override async Task OnParametersSetAsync()
-        {
-            if (Id != Guid.Empty)
-            {
-                NavigationManager.NavigateTo("/receive/index", false);
-                await Cancel(Id);
-            }
-        }
-
         private async void PageUpdateHandler(string property, UpdateModel model)
         {
             await InvokeAsync(async () =>
             {
-                await LoadData(PagingParameter.CurrentPage, null);
+                if (model != null)
+                {
+                    if (model.Prefix != null)
+                        NavigationManager.NavigateTo("/issue/index", true);
+
+                    if (model.Suffix != null)
+                        NavigationManager.NavigateTo("/issue/index", true);
+
+                    if (model.Issue != null)
+                        await LoadData(PagingParameter.CurrentPage, null);
+                }
+                else
+                {
+                    if (property != null)
+                    {
+                        foreach (var load in property.Split(new char[] { ',' },
+                            StringSplitOptions.RemoveEmptyEntries))
+                        {
+                            if (!isLock)
+                            {
+                                while (isLock)
+                                {
+                                    Logger.LogInformation("System is busy ...");
+                                    await Task.Delay(100);
+                                }
+
+                                if (load == "issue/index")
+                                    await LoadData(PagingParameter.CurrentPage, null);
+                            }
+                        }
+                    }
+                }
+
                 StateHasChanged();
             });
         }
@@ -97,7 +119,7 @@ namespace InventoryApp.Pages
             }
         }
 
-        //EventCallback for paging navigation linkmo
+        //EventCallback for paging navigation link
         public async Task SelectedPage(int page)
         {
             PagingParameter.CurrentPage = page;
@@ -112,6 +134,7 @@ namespace InventoryApp.Pages
 
         private async Task CallData(int page, string searchText)
         {
+            isLock = true;
             issuevm.Clear();
 
             if (searchText != null)
@@ -147,6 +170,8 @@ namespace InventoryApp.Pages
                     StateHasChanged();
                 }
             }
+
+            isLock = false;
         }
 
         private async Task Download()
@@ -155,42 +180,6 @@ namespace InventoryApp.Pages
             var issueList = await IssueService.GetReport();
             var fileContent = await ExcelReporter<IssueReportViewModel>.GetReports(issueList, "Issue List");
             await jsModule.InvokeVoidAsync("saveAsFile", "Inventory Report.xlsx", Convert.ToBase64String(fileContent));
-        }
-
-        //Request for remove from list which is aproved by the authorize person
-        private async Task Cancel(Guid id)
-        {
-            //var issue = await IssueService.GetByIdAsync(id);
-
-            //adding filter and order then convert in single result
-            var issuResult = await IssueService.GetItemsAsync(
-                filter: x => x.Id == id,
-                orderBy: o => o.OrderBy(x => x.Product.Prefix.Name)
-                                .ThenBy(x => x.Product.Name)
-                                .ThenByDescending(x => x.IssueDate),
-                includeProperties: "Product,Product.Prefix,Product.Suffix");
-
-            var issue = issuResult.FirstOrDefault();
-
-            var parameters = new ModalParameters();
-            parameters.Add(nameof(DeleteConfirmModal.Message), $"{issue.Product.Prefix?.Name} {issue.Product.Name} "
-                                                    + $" {issue.Product.Suffix?.Name}");
-            parameters.Add(nameof(DeleteConfirmModal.ShowInput), true);
-
-            var options = new ModalOptions { HideCloseButton = true, DisableBackgroundCancel = true, };
-            var fromMessage = Modal.Show<DeleteConfirmModal>("Do you want to remove this item?", parameters, options);
-
-            var result = await fromMessage.Result;
-            if (!result.Cancelled)
-            {
-                issue.Note = result.Data.ToString().ToUpper();
-                await IssueService.UpdateAsync(issue);
-
-                UpdateService.UpdatePage();
-                Logger.LogInformation("{} is requested for cancellation!", issue.Product.Name);
-                AlertService.AddMessage(new Alert("Request for cancel entry has been sent!",
-                    AlertType.Info));
-            }
         }
 
         public void Dispose()

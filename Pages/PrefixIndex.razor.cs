@@ -14,7 +14,7 @@ using System.Threading.Tasks;
 
 namespace InventoryApp.Pages
 {
-    public partial class PrefixIndex : IDisposable
+    public partial class PrefixIndex :ComponentBase, IDisposable
     {
         //Local varialbels
         public List<Prefix> prefixes;

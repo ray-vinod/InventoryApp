@@ -48,12 +48,12 @@ namespace InventoryApp.Pages
         Product ProductSelection
         {
             get => issue.Product;
+
             set
             {
                 issue.Product = value;
                 if (value != null)
                     ChangeHandler(value).ConfigureAwait(false);
-                StateHasChanged();
             }
         }
 
@@ -83,17 +83,21 @@ namespace InventoryApp.Pages
         {
             await InvokeAsync(async () =>
             {
-                products = await ProductService.GetItemsAsync(includeProperties:
-                    "Product,Product.Prefix,Produc.Suffix");
+                if (model.Product != null || model.Prefix != null && model.Suffix != null)
+                {
+                    products = await ProductService.GetItemsAsync(includeProperties:
+                        "Prefix,Suffix");
+                }
+
                 StateHasChanged();
             });
         }
 
         private void ReadUserName()
         {
-            var result = UserStateService.Name;
+            if (UserStateService.Name != null)
             {
-                issue.IssueBy = result;
+                issue.IssueBy = UserStateService.Name;
             }
 
             if (issue.Remarks == null)
@@ -132,21 +136,22 @@ namespace InventoryApp.Pages
 
                     //Stock Update
                     stock.TotalIssueReturn += issue.Quantity;
-                    stock.InStock = (stock.TotalReceive - stock.TotalReceiveReturn) -
-                                    (stock.TotalIssue - stock.TotalIssueReturn);
+                    int receiveQty = stock.TotalReceive - stock.TotalReceiveReturn;
+                    int issueQty = stock.TotalIssue - stock.TotalIssueReturn;
+                    stock.InStock = receiveQty - issueQty;
                     await StockService.UpdateAsync(stock);
                     Logger.LogInformation("Stock updated");
-
 
                     //Receive update on sale return
                     if (receive.IsUse == true)
                     {
                         receive.IsUse = false;
-                        receive.UseQuantity = receive.Quantity - issue.Quantity;
+                        receive.UseQuantity -= issue.Quantity;
                     }
                     else
                     {
-                        receive.UseQuantity -= issue.Quantity;
+                        if (receive.UseQuantity >= issue.Quantity)
+                            receive.UseQuantity -= issue.Quantity;
                     }
 
                     await ReceiveService.UpdateAsync(receive);
@@ -177,7 +182,7 @@ namespace InventoryApp.Pages
                         issue = new Issue();
                         receive = new Receive();
 
-                        UpdateService.UpdatePage();
+                        UpdateService.UpdatePage(entity: new UpdateModel { SaleReturn = saleReturn });
                         //Redict to Issue List Page 
                         NavigationManager.NavigateTo("/issue/index", false);
                     }
@@ -200,15 +205,18 @@ namespace InventoryApp.Pages
                 issue.Remarks = issue.Remarks.ToUpper();
                 issue.ProductId = issue.Product.Id;
                 issue.Product = null;
+                int qty = issue.Quantity;
 
-                //Stock management long running task
-                bool save = await Task.Run(async () => await StockService.IssueItem(issue));
+                //Stock management long running multiple tasks
+                bool save = await StockService.IssueItem(issue);
+
                 if (save)
                 {
                     Logger.LogInformation("sale item created!");
                     AlertService.AddMessage(new Alert(msg + AlertMessage.AddInfo, AlertType.Info));
 
-                    UpdateService.UpdatePage();
+                    issue.Quantity = qty;
+                    UpdateService.UpdatePage(property: "issue/index", entity: new UpdateModel { Issue = issue });
 
                     //Reset Form
                     IsDisable = false;
@@ -241,6 +249,8 @@ namespace InventoryApp.Pages
                 AlertService.AddMessage(new Alert("Item not available in stock!", AlertType.Warning));
                 return;
             }
+
+            await InvokeAsync(StateHasChanged);
         }
 
         private async Task Return()
@@ -269,5 +279,6 @@ namespace InventoryApp.Pages
         {
             UpdateService.OnUpdateRequested -= PageUpdateHandler;
         }
+
     }
 }

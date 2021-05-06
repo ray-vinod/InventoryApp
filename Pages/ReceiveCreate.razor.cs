@@ -290,6 +290,7 @@ namespace InventoryApp.Pages
         {
             int getbatch = await ReceiveService.GetBatch(product.Id);
             receive.Batch = getbatch + 1;
+
             StateHasChanged();
         }
 
