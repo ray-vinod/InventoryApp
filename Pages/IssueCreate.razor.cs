@@ -85,8 +85,7 @@ namespace InventoryApp.Pages
             {
                 if (model.Product != null || model.Prefix != null && model.Suffix != null)
                 {
-                    products = await ProductService.GetItemsAsync(includeProperties:
-                        "Prefix,Suffix");
+                    products = await ProductService.GetItemsAsync(includeProperties: "Prefix,Suffix");
                 }
 
                 StateHasChanged();
@@ -157,7 +156,6 @@ namespace InventoryApp.Pages
                     await ReceiveService.UpdateAsync(receive);
                     Logger.LogInformation("Receive table updated");
 
-
                     //Issue
                     issue.ReturnQty += issue.Quantity; //set returned qty
                     issue.Quantity = oldQuantity; //then set up back to normal issued qty
@@ -175,8 +173,7 @@ namespace InventoryApp.Pages
                     if (updatedIssue != null)
                     {
                         Logger.LogInformation("Sale returned successfully!");
-                        AlertService.AddMessage(new Alert(msg + "Sale returned successfully!",
-                            AlertType.Info));
+                        AlertService.AddMessage(new Alert(msg + "Sale returned successfully!", AlertType.Info));
 
                         stock = new Stock();
                         issue = new Issue();

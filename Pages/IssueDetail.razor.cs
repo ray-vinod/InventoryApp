@@ -89,9 +89,9 @@ namespace InventoryApp.Pages
                     AlertService.AddMessage(new Alert("Request for cancel entry has been sent!",
                         AlertType.Info));
 
-                    UpdateService.UpdatePage();
+                    UpdateService.UpdatePage(entity: new UpdateModel { Issue = isUpdateEntity });
 
-                    NavigationManager.NavigateTo("/issue/index", true);
+                    NavigationManager.NavigateTo("/issue/index", false);
                 }
             }
         }

@@ -4,6 +4,7 @@ using InventoryApp.Models.Enums;
 using InventoryApp.Models.ViewModels;
 using InventoryApp.Services;
 using Microsoft.AspNetCore.Components;
+using Microsoft.Extensions.Logging;
 using Microsoft.JSInterop;
 using System;
 using System.Collections.Generic;
@@ -27,6 +28,9 @@ namespace InventoryApp.Pages
         private IJSRuntime JSRuntime { get; set; }
         [Inject]
         public AlertService AlertService { get; set; }
+        [Inject]
+        public ILogger<IssueReturn> Logger { get; set; }
+
 
 
 
@@ -43,7 +47,7 @@ namespace InventoryApp.Pages
         {
             await InvokeAsync(async () =>
             {
-                if (model.SaleReturn != null)
+                if (model !=null && model.SaleReturn != null)
                 {
                     if (!isLock)
                     {

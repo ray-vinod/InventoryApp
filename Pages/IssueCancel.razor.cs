@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
+
 namespace InventoryApp.Pages
 {
     public partial class IssueCancel : IDisposable
@@ -20,6 +21,7 @@ namespace InventoryApp.Pages
         public List<PageUrl> pageUrlList;
         public bool spinnerOnOff = true;
         public string title = "Issue-cancel";
+        private bool isLock = false;
 
         [Parameter]
         public Guid Id { get; set; }
@@ -67,8 +69,20 @@ namespace InventoryApp.Pages
         {
             await InvokeAsync(async () =>
             {
-                await LoadData(PagingParameter.CurrentPage);
-                StateHasChanged();
+                if (model != null && model.Issue != null && model.Issue.Note != null)
+                {
+                    if (!isLock)
+                    {
+                        while (isLock)
+                        {
+                            await Task.Delay(100);
+                        }
+
+                        await LoadData(PagingParameter.CurrentPage);
+                    }
+
+                    StateHasChanged();
+                }
             });
         }
 
@@ -194,10 +208,13 @@ namespace InventoryApp.Pages
 
         private async Task CallData(int page)
         {
+            isLock = true;
             issues.Clear();
+
             await foreach (var issue in IssueService.StreamListAsync(
                 page,
                 PagingParameter.PageSize,
+                filter: x => x.Note != null,
                 orderBy: o => o.OrderByDescending(x => x.IssueDate)
                     .ThenBy(x => x.Product.Name),
                 includeProperties: "Product,Product.Prefix,Product.Suffix"))
@@ -216,6 +233,8 @@ namespace InventoryApp.Pages
                 spinnerOnOff = false;
                 StateHasChanged();
             }
+
+            isLock = false;
         }
 
         private async Task Abort(Guid id)
