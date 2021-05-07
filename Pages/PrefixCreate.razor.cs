@@ -19,12 +19,11 @@ namespace InventoryApp.Pages
 
         [Parameter] public Guid Id { get; set; }
 
-        //Refresh to Prfix and suffix list in product create page
         [Inject] public NavigationManager NavigationManager { get; set; }
         [Inject] public AlertService AlertService { get; set; }
         [Inject] public PrefixService PrefixService { get; set; }
         [Inject] public ILogger<PrefixCreate> Logger { get; set; }
-        [Inject] public UpdateService<Prefix> UpdateService { get; set; }
+        [Inject] public UpdateService<UpdateModel> UpdateService { get; set; }
 
 
 
@@ -59,7 +58,7 @@ namespace InventoryApp.Pages
             var isExist = result.FirstOrDefault();
 
             //Prevent duplication item
-            if (isExist != null && prefix.Id != isExist.Id) 
+            if (isExist != null && prefix.Id != isExist.Id)
             {
                 Logger.LogWarning("{0} is already exist!", prefix.Name);
                 AlertService.AddMessage(new Alert(prefix.Name + AlertMessage.ExistInfo,
@@ -81,7 +80,7 @@ namespace InventoryApp.Pages
                     AlertService.AddMessage(new Alert(prefix.Name + AlertMessage.AddInfo,
                         AlertType.Success));
 
-                    UpdateService.UpdatePage("prefix/index",null);
+                    UpdateService.UpdatePage("prefix/index");
                 }
 
                 getFocus = true;
@@ -107,9 +106,9 @@ namespace InventoryApp.Pages
                         AlertType.Success));
 
                     //send id for the update page
-                    UpdateService.UpdatePage("prefix/update",isUpdate);
+                    UpdateService.UpdatePage(entity: new UpdateModel { Prefix = isUpdate });
 
-                    NavigationManager.NavigateTo("/prefix/index",false);
+                    NavigationManager.NavigateTo("/prefix/index", false);
                 }
             }
         }

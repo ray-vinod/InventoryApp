@@ -20,6 +20,7 @@ namespace InventoryApp.Pages
         public List<Suffix> suffixes;
         public bool spinnerOnOff = true;
         List<PageUrl> urls = new List<PageUrl>();
+        private bool isLock = false;
 
         [CascadingParameter] IModalService Modal { get; set; }
         [Inject] public SuffixService SuffixService { get; set; }
@@ -28,7 +29,7 @@ namespace InventoryApp.Pages
         [Inject] public AlertService AlertService { get; set; }
         [Inject] public ILogger<SuffixIndex> Logger { get; set; }
         [Inject] public NavigationManager NavigationManager { get; set; }
-        [Inject] public UpdateService<Suffix> UpdateService { get; set; }
+        [Inject] public UpdateService<UpdateModel> UpdateService { get; set; }
 
 
 
@@ -44,27 +45,36 @@ namespace InventoryApp.Pages
             await LoadData(PagingParameter.CurrentPage, null);
         }
 
-        public async void PageUpdateHandler(string property, Suffix suffix)
+        public async void PageUpdateHandler(string property, UpdateModel model)
         {
             await InvokeAsync(async () =>
             {
-                foreach (var item in property.Split(",", StringSplitOptions.RemoveEmptyEntries))
+                if (model != null && model.Suffix != null)
                 {
-                    if (item.Equals("suffix/index"))
+                    //find index and remove
+                    int index = suffixes.FindIndex(x => x.Id == model.Suffix.Id);
+                    suffixes.RemoveAt(index);
+
+                    //find new update entity from db
+                    suffixes.Insert(index, model.Suffix);
+                    //NavigationManager.NavigateTo("/suffix/index", true);
+                }
+
+                if (model == null && property !=null)
+                {
+                    foreach (var load in property.Split(new char[] { ',' },
+                        StringSplitOptions.RemoveEmptyEntries))
                     {
-                        await LoadData(PagingParameter.CurrentPage, null);
-                    }
+                        if (!isLock && load == "suffix/index")
+                        {
+                            while (isLock)
+                            {
+                                Logger.LogInformation("System is busy ...");
+                                await Task.Delay(100);
+                            }
 
-                    if(suffix !=null)
-                    {
-                        //find index and remove
-                        int index = suffixes.FindIndex(x=>x.Id==suffix.Id);
-                        suffixes.RemoveAt(index);
-
-                        //find new update entity from db
-                        suffixes.Insert(index,suffix);
-
-                        NavigationManager.NavigateTo("/suffix/index", true);
+                            await LoadData(PagingParameter.CurrentPage, null);
+                        }
                     }
                 }
 
@@ -131,13 +141,14 @@ namespace InventoryApp.Pages
                     AlertService.AddMessage(new Alert(suffix.Name + AlertMessage.DeleteInfo,
                         AlertType.Error));
 
-                    UpdateService.UpdatePage("suffix/index", null);
+                    UpdateService.UpdatePage("suffix/index");
                 }
             }
         }
 
         private async Task CallData(int page, string searchText)
         {
+            isLock = true;
             suffixes.Clear();
             Logger.LogInformation("Prefix list is loading!");
 
@@ -166,6 +177,8 @@ namespace InventoryApp.Pages
                     StateHasChanged();
                 }
             }
+
+            isLock = false;
         }
 
         public void Dispose()

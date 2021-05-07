@@ -1,13 +1,11 @@
 using Blazored.Modal;
 using Blazored.Modal.Services;
 using InventoryApp.Components;
-using InventoryApp.Data;
 using InventoryApp.Helpers;
 using InventoryApp.Models;
 using InventoryApp.Models.Enums;
 using InventoryApp.Services;
 using Microsoft.AspNetCore.Components;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -16,23 +14,21 @@ using System.Threading.Tasks;
 
 namespace InventoryApp.Pages
 {
-    public partial class PrefixIndex : IDisposable
+    public partial class PrefixIndex :ComponentBase, IDisposable
     {
         //Local varialbels
         public List<Prefix> prefixes;
         public bool spinnerOnOff = true;
         List<PageUrl> urls = new List<PageUrl>();
+        private bool isLock = false;
 
         [CascadingParameter] IModalService Modal { get; set; }
-        [Inject] public PrefixService PrefixService { get; set; }
-        [Inject] public ApplicationDbContext Context { get; set; }
 
-        //Refresh Product Create and Index page
+        [Inject] public PrefixService PrefixService { get; set; }
         [Inject] public AlertService AlertService { get; set; }
         [Inject] public ILogger<PrefixIndex> Logger { get; set; }
         [Inject] public NavigationManager NavigationManager { get; set; }
-        [Inject] public UpdateService<Prefix> UpdateService { get; set; }
-
+        [Inject] public UpdateService<UpdateModel> UpdateService { get; set; }
 
 
         protected override async Task OnInitializedAsync()
@@ -47,25 +43,35 @@ namespace InventoryApp.Pages
             await LoadData(PagingParameter.CurrentPage, null);
         }
 
-        public async void PageUpdateHandler(string property, Prefix prefix)
+        private async void PageUpdateHandler(string property, UpdateModel model)
         {
             await InvokeAsync(async () =>
             {
-                foreach (var item in property.Split(",", StringSplitOptions.RemoveEmptyEntries))
+                if (model != null && model.Prefix != null)
                 {
-                    if (item.Equals("prefix/index"))
-                    {
-                        await LoadData(PagingParameter.CurrentPage, null);
-                    }
+                    //find index of list and remove
+                    int index = prefixes.FindIndex(x => x.Id == model.Prefix.Id);
+                    prefixes.RemoveAt(index);
 
-                    if (prefix != null)
-                    {
-                        //find index of list and remove
-                        int index = prefixes.FindIndex(x => x.Id == prefix.Id);
-                        prefixes.RemoveAt(index);
+                    //find the updated entity and add to list at index
+                    prefixes.Insert(index, model.Prefix);
+                }
 
-                        //find the updated entity and add to list at index
-                        prefixes.Insert(index, prefix);
+                if (model == null && property !=null)
+                {
+                    foreach (var load in property.Split(new char[] { ',' },
+                        StringSplitOptions.RemoveEmptyEntries))
+                    {
+                        if (!isLock && load == "prefix/index")
+                        {
+                            while (isLock)
+                            {
+                                Logger.LogInformation("System is busy ...");
+                                await Task.Delay(100);
+                            }
+
+                            await LoadData(PagingParameter.CurrentPage, null);
+                        }
                     }
                 }
 
@@ -132,13 +138,14 @@ namespace InventoryApp.Pages
                     AlertService.AddMessage(new Alert(prefix.Name + AlertMessage.DeleteInfo,
                         AlertType.Error));
 
-                    UpdateService.UpdatePage("prefix/index", null);
+                    UpdateService.UpdatePage("prefix/index");
                 }
             }
         }
 
         private async Task CallData(int page, string searchText)
         {
+            isLock = true;
             prefixes.Clear();
             Logger.LogInformation("Prefix list is loading!");
 
@@ -167,6 +174,8 @@ namespace InventoryApp.Pages
                     StateHasChanged();
                 }
             }
+
+            isLock = false;
         }
 
         public void Dispose()

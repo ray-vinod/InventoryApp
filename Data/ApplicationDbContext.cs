@@ -11,7 +11,6 @@ namespace InventoryApp.Data
         {
         }
 
-
         protected override void OnModelCreating(ModelBuilder builder)
         {
             builder.Entity<Prefix>().HasMany(x => x.Products)
@@ -41,7 +40,6 @@ namespace InventoryApp.Data
             builder.Entity<Product>().HasOne(x => x.Stock)
                     .WithOne(p => p.Product)
                     .OnDelete(DeleteBehavior.Restrict);
-
 
             base.OnModelCreating(builder);
         }

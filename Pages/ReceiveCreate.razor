@@ -1,0 +1,91 @@
+﻿@page "/receive/create"
+@page "/receive/return"
+@page "/receive/return/{id:guid}"
+@page "/receive/edit"
+@page "/receive/edit/{id:guid}"
+@layout MainLayout
+@attribute [Authorize(Roles = "SuperAdmin,Admin")]
+
+<Title Value="@title"></Title>
+
+<Card Title="@((receive.Id == Guid.Empty) ? "Receive Item":IsEdit ? "Edit Receive":"Purechase Return")">
+    <EditForm Model="@receive" OnValidSubmit="AddEditReturn">
+        <DataAnnotationsValidator />
+
+        <div class="form-row align-items-center">
+            <div class="form-group col-sm-12 col-md-6">
+                <label class="control-label">Item's Name</label>
+                <BlazoredTypeahead SearchMethod="SearchAsync"
+                                   @bind-Value="ProductSelection"
+                                   MinimumLength="2"
+                                   EnableDropDown="false"
+                                   Disabled="IsTrue"
+                                   placeholder="Search by item's name..." class="form-control">
+                    <SelectedTemplate Context="item">
+                        @(string.Format($"{((item.Prefix !=null) ? item.Prefix.Name:"")} {item.Name} " +
+                                        $"{(IsTrue ? "     --- ("+avQty+")":"")}"))
+                    </SelectedTemplate>
+                    <HelpTemplate>
+                        Please enter at least 2 character to perform a search.
+                    </HelpTemplate>
+                    <ResultTemplate Context="item">
+                        @string.Format($"{((item.Prefix != null) ? item.Prefix.Name : "")} {item.Name}")
+                    </ResultTemplate>
+                </BlazoredTypeahead>
+            </div>
+
+            <div class="form-group col-sm-12 col-md-1">
+                <label class="control-label">Batch</label>
+                <InputNumber @bind-Value="receive.Batch" @oninput:preventDefault disabled="@IsTrue" class="form-control" />
+            </div>
+
+            <div class="form-group col-sm-12 col-md-2">
+                <label class="control-label">Qty</label>
+                <InputNumber @bind-Value="receive.Quantity" @oninput:preventDefault disabled="@IsEdit" class="form-control" />
+            </div>
+
+            <div class="form-group col-sm-12 col-md-3">
+                <label for="Qty" class="form-label">Recieve Date</label>
+                <InputDate @bind-Value="receive.ReceiveDate" @oninput:preventDefault disabled="@IsDisable" class="form-control" />
+            </div>
+
+            <div class="form-group col-sm-12 col-md-6">
+                <label for="Remarks" class="form-label">Remarks</label>
+                <InputText @bind-Value="receive.Remarks" @oninput:preventDefault class="form-control" />
+            </div>
+
+            <div class="form-group col-sm-12 col-md-3">
+                <label for="Qty" class="form-label">Mfg Date</label>
+                <InputDate @bind-Value="receive.ManufactureDate" @oninput:preventDefault disabled="@IsDisable" class="form-control" />
+            </div>
+
+            <div class="form-group col-sm-12 col-md-3">
+                <label for="Qty" class="form-label">Expiry Date</label>
+                <InputDate @bind-Value="receive.ExpiryDate" @oninput:preventDefault disabled="@IsDisable" class="form-control" />
+            </div>
+
+        </div>
+
+        <div class="form-group">
+            <AddEditButton Id="receive.Id" Text="@((receive.Id == Guid.Empty) ? "Add":IsEdit ? "Edit":"Return")" />
+            @if (receive.Product != null)
+            {
+                <a class="float-right btn btn-outline-warning" @onclick="Reset">
+                    <span class="oi oi-delete mr-2"></span>Reset
+                </a>
+            }
+            else
+            {
+                <a @onclick="@(()=>NavigationManager.NavigateTo("/receive/index",false))"
+               class="float-right btn btn-outline-secondary">
+                    <span class="oi oi-arrow-circle-left mr-2 mb-2"></span>Back To List
+                </a>
+            }
+        </div>
+
+        <div class="form-group">
+            <ValidationSummary />
+        </div>
+    </EditForm>
+</Card>
+

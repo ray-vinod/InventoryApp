@@ -12,19 +12,21 @@ namespace InventoryApp.Services
 {
     public class StockService : Repository<Stock, ApplicationDbContext>
     {
-        ApplicationDbContext ApplicationDbContext
+        public ApplicationDbContext Context
         {
             get { return _context as ApplicationDbContext; }
         }
 
+        private readonly ApplicationDbContext _db;
+
         public StockService(ApplicationDbContext context) : base(context)
         {
+            _db = context;
         }
-
 
         public async Task<List<StockViewModel>> GetStockReport()
         {
-            var entities = await ApplicationDbContext.Stocks
+            var entities = await Context.Stocks
                 .Include(x => x.Product)
                 .Include(x => x.Product.Prefix)
                 .Include(x => x.Product.Suffix)
@@ -33,7 +35,8 @@ namespace InventoryApp.Services
                 .AsNoTracking()
                 .Select(x => new StockViewModel
                 {
-                    Name = $"{((x.Product.Prefix != null) ? x.Product.Prefix.Name : "")} {x.Product.Name} " +
+                    Name = $"{((x.Product.Prefix != null) ? x.Product.Prefix.Name : "")} " +
+                           $"{x.Product.Name} " +
                            $"{((x.Product.Suffix != null) ? x.Product.Suffix.Name : "")}",
                     Total_Receive = x.TotalReceive,
                     Total_Receive_Return = x.TotalReceiveReturn,
@@ -48,13 +51,13 @@ namespace InventoryApp.Services
         //Create and Update Stock row, when Item received in
         public async Task ReceiveItem(Receive receive)
         {
-            var stock = await ApplicationDbContext.Stocks.FindAsync(receive.ProductId);
+            var stock = await Context.Stocks.FindAsync(receive.ProductId);
 
             if (stock != null)
             {
                 stock.TotalReceive += receive.Quantity;
                 stock.InStock = (stock.TotalReceive - stock.TotalReceiveReturn) - (stock.TotalIssue - stock.TotalIssueReturn);
-                ApplicationDbContext.Stocks.Update(stock);
+                Context.Stocks.Update(stock);
                 Console.WriteLine("Message : ==> Stock updated!");
             }
             else
@@ -69,34 +72,33 @@ namespace InventoryApp.Services
                     InStock = receive.Quantity,
                 };
 
-                ApplicationDbContext.Stocks.Add(stock);
+                Context.Stocks.Add(stock);
                 Console.WriteLine("Message : ==> Stock Added!");
             }
 
-            await ApplicationDbContext.SaveChangesAsync();
+            await Context.SaveChangesAsync();
         }
-
 
         //Issue Item from Stock as FIFO style
         public async Task<bool> IssueItem(Issue entity)
         {
-            List<Receive> receives = new List<Receive>();
-            List<Issue> issues = new List<Issue>();
-
-            var stock = await ApplicationDbContext.Stocks.FindAsync(entity.ProductId);
+            var stock = await Context.Stocks.FindAsync(entity.ProductId);
 
             //find early exipry date item and then issue form that
-            var earlyExpiryRecieveItems = await ApplicationDbContext.Receives
-                .Where(x => x.IsDelete == false && x.IsUse == false && x.ProductId == entity.ProductId)
-                .OrderBy(x => x.ExpiryDate)
-                .ToListAsync();
+            var allReceive = Context.Receives.AsQueryable();
 
-            foreach (var rItem in earlyExpiryRecieveItems)
+            var earlyExpiryRecieveItems = allReceive
+                .Where(x => x.IsDelete == false &&
+                        x.IsUse == false &&
+                        x.ProductId == entity.ProductId
+                )
+                .OrderBy(x => x.ExpiryDate)
+                .ToList();
+
+            foreach (var receive in earlyExpiryRecieveItems)
             {
                 if (entity.Quantity == 0)
-                {
                     break;
-                }
 
                 //Create issue item without quantity
                 var issue = new Issue
@@ -106,61 +108,54 @@ namespace InventoryApp.Services
                     Remarks = entity.Remarks,
                     IssueBy = entity.IssueBy,
                     Note = entity.Note,
-                    PurchaseId = rItem.Id,
+                    PurchaseId = receive.Id,
                     Quantity = 0,
                 };
 
-                int availableQty = rItem.Quantity - rItem.UseQuantity;
-
+                int availableQty = receive.Quantity - receive.UseQuantity;
+               
                 if (entity.Quantity >= availableQty)
                 {
+                    //for the loop runs
                     entity.Quantity -= availableQty;
 
-                    rItem.UseQuantity = 0;
-                    rItem.IsUse = true;
-
-                    stock.TotalIssue += availableQty;
-                    stock.InStock = (stock.TotalReceive - stock.TotalReceiveReturn) - (stock.TotalIssue - stock.TotalIssueReturn);
-
+                    //update receive
+                    receive.UseQuantity = 0;
+                    receive.IsUse = true;
+                    
+                    //update issue
                     issue.Quantity += availableQty;
+
+                    //update stock
+                    stock.TotalIssue += availableQty;
+
                 }
                 else
                 {
-                    rItem.UseQuantity += entity.Quantity;
+                    //update receive
+                    receive.UseQuantity += entity.Quantity;
 
-                    stock.TotalIssue += entity.Quantity;
-                    stock.InStock = (stock.TotalReceive - stock.TotalReceiveReturn) - (stock.TotalIssue - stock.TotalIssueReturn);
-
+                    //update issue
                     issue.Quantity += entity.Quantity;
 
+                    //update stock
+                    stock.TotalIssue += entity.Quantity;
+
+                    //for the loop runs
                     entity.Quantity = 0;
                 }
 
-                //Create purchase item
-                receives.Add(rItem);
-                issues.Add(issue);
+                int receiveQty = stock.TotalReceive - stock.TotalReceiveReturn;
+                int issueQty = stock.TotalIssue - stock.TotalIssueReturn;
+                stock.InStock = receiveQty - issueQty;
+
+                Context.Receives.Update(receive);
+                Context.Issues.Add(issue);
+                Context.Stocks.Update(stock);
+                Context.SaveChanges();
             }
-
-            var tasks = new List<Task>();
-
-            var rtask = Task.Run(() => ApplicationDbContext.Receives.UpdateRange(receives));
-            tasks.Add(rtask);
-
-            var itask = Task.Run(() => ApplicationDbContext.Issues.UpdateRange(issues));
-            tasks.Add(itask);
-
-            var stask = Task.Run(() => ApplicationDbContext.Stocks.Update(stock));
-            tasks.Add(stask);
-
-            await Task.WhenAll(tasks);
-
-            await Task.Run(() => ApplicationDbContext.SaveChangesAsync());
-
-            Console.WriteLine("Message : ==> Issued Item and managed stock!");
-
+            
             return true;
         }
-
-
     }
 }

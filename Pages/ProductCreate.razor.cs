@@ -12,7 +12,6 @@ namespace InventoryApp.Pages
 {
     public partial class ProductCreate : IDisposable
     {
-
         public List<Prefix> prefixes;
         public List<Suffix> suffixes;
         public List<string> products;
@@ -20,6 +19,7 @@ namespace InventoryApp.Pages
         public ElementReference firstInput;
         public bool getFocus = false;
         public string title = "Product-create";
+        private bool isLock = false;
 
         [Parameter] public Guid Id { get; set; }
 
@@ -30,22 +30,17 @@ namespace InventoryApp.Pages
         [Inject] public ProductService ProductService { get; set; }
         [Inject] public StockService StockService { get; set; }
         [Inject] public ILogger<ProductCreate> Logger { get; set; }
-        [Inject] public UpdateService<Product> UpdateService { get; set; }
-        [Inject] public UpdateService<Prefix> UpdateServicePrefix { get; set; }
-        [Inject] public UpdateService<Suffix> UpdateServiceSuffix { get; set; }
-
+        [Inject] public UpdateService<UpdateModel> UpdateService { get; set; }
 
 
         protected override async Task OnInitializedAsync()
         {
-            await Task.Delay(0);
             product = new Product();
             products = new List<string>();
             prefixes = new List<Prefix>();
             suffixes = new List<Suffix>();
 
-            UpdateServicePrefix.OnUpdateRequested += PrefixUpdateHandler;
-            UpdateServiceSuffix.OnUpdateRequested += SuffixUpdateHandler;
+            UpdateService.OnUpdateRequested += PageUpdateHandler;
 
             await LoadPrefix();
             await LoadSuffix();
@@ -67,51 +62,49 @@ namespace InventoryApp.Pages
             }
         }
 
-        public async void PrefixUpdateHandler(string property, Prefix prefix)
+        public async void PageUpdateHandler(string property, UpdateModel model)
         {
             await InvokeAsync(async () =>
             {
-                foreach (var item in property.Split(",", StringSplitOptions.RemoveEmptyEntries))
+                if (model != null)
                 {
-                    if (item.Equals("prefix/index"))
-                    {
-                        await LoadPrefix();
-                    }
-
-                    if (prefix != null)
+                    if (model.Prefix != null)
                     {
                         //find index of list and remove
-                        int index = prefixes.FindIndex(x => x.Id == prefix.Id);
+                        int index = prefixes.FindIndex(x => x.Id == model.Prefix.Id);
                         prefixes.RemoveAt(index);
 
                         //find the updated entity and add to list at index
-                        prefixes.Insert(index, prefix);
-                    }
-                }
-
-               StateHasChanged();
-            });
-        }
-
-        public async void SuffixUpdateHandler(string property, Suffix suffix)
-        {
-            await InvokeAsync(async () =>
-            {
-                foreach (var item in property.Split(",", StringSplitOptions.RemoveEmptyEntries))
-                {
-                    if (item.Equals("suffix/index"))
-                    {
-                        await LoadSuffix();
+                        prefixes.Insert(index, model.Prefix);
                     }
 
-                    if (suffix != null)
+                    //=====================Suffix Update====================================
+                    if (model.Suffix != null)
                     {
                         //find index of list and remove
-                        int index = suffixes.FindIndex(x => x.Id == suffix.Id);
+                        int index = suffixes.FindIndex(x => x.Id == model.Suffix.Id);
                         suffixes.RemoveAt(index);
 
                         //find the updated entity and add to list at index
-                        suffixes.Insert(index, suffix);
+                        suffixes.Insert(index, model.Suffix);
+                    }
+                }
+                else
+                {
+                    if (property != null)
+                    {
+                        foreach (var load in property.Split(new char[] { ',' },
+                            StringSplitOptions.RemoveEmptyEntries))
+                        {
+                            if (!isLock)
+                            {
+                                if (load == "prefix/index")
+                                    await LoadPrefix();
+
+                                if (load == "suffix/index")
+                                    await LoadSuffix();
+                            }
+                        }
                     }
                 }
 
@@ -168,7 +161,7 @@ namespace InventoryApp.Pages
                     AlertService.AddMessage(new Alert(product.Name + AlertMessage.AddInfo,
                         AlertType.Success));
 
-                    UpdateService.UpdatePage("product/index", null);
+                    UpdateService.UpdatePage("product/index");
 
                     getFocus = true;
                     product = new Product();
@@ -204,8 +197,8 @@ namespace InventoryApp.Pages
                         AlertService.AddMessage(new Alert(product.Name + AlertMessage.UpdateInfo,
                             AlertType.Success));
 
-                        UpdateService.UpdatePage("product/update", isUpdated);
-                        NavigationManager.NavigateTo("/product/index",false);
+                        UpdateService.UpdatePage(entity: new UpdateModel { Product = isUpdated });
+                        NavigationManager.NavigateTo("/product/index", false);
                     }
                     else
                     {
@@ -224,22 +217,28 @@ namespace InventoryApp.Pages
 
         private async Task LoadSuffix()
         {
+            isLock = true;
             suffixes = (List<Suffix>)await SuffixService.GetItemsAsync();
 
             if (suffixes.Any())
             {
                 suffixes.OrderBy(x => x.Name);
             }
+
+            isLock = false;
         }
 
         private async Task LoadPrefix()
         {
+            isLock = true;
             prefixes = (List<Prefix>)await PrefixService.GetItemsAsync();
 
             if (prefixes.Any())
             {
                 prefixes.OrderBy(x => x.Name);
             }
+
+            isLock = false;
         }
 
         //Prefix Search function
@@ -262,8 +261,7 @@ namespace InventoryApp.Pages
 
         public void Dispose()
         {
-            UpdateServicePrefix.OnUpdateRequested -= PrefixUpdateHandler;
-            UpdateServiceSuffix.OnUpdateRequested -= SuffixUpdateHandler;
+            UpdateService.OnUpdateRequested -= PageUpdateHandler;
         }
 
     }

@@ -13,14 +13,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
+
+
 namespace InventoryApp.Pages
 {
     public partial class ProductIndex : IDisposable
     {
-
         private List<ProductViewModel> products;
         List<PageUrl> urls;
         private bool spinnerOnOff = true;
+        private bool isLock = false;
 
         [CascadingParameter]
         IModalService Modal { get; set; }
@@ -40,8 +42,7 @@ namespace InventoryApp.Pages
         [Inject]
         public NavigationManager NavigationManager { get; set; }
         [Inject]
-        public UpdateService<Product> UpdateService { get; set; }
-
+        public UpdateService<UpdateModel> UpdateService { get; set; }
 
 
 
@@ -54,30 +55,108 @@ namespace InventoryApp.Pages
                 new PageUrl(null, "Delete", "oi-trash", "btn-outline-danger ml-2")
             };
 
-            UpdateService.OnUpdateRequested += PageUpdateHandler;
-
+            UpdateService.OnUpdateRequested += AnyPageUpdateHandler;
 
             await LoadData(PagingParameter.CurrentPage, null);
 
         }
 
-        public async void PageUpdateHandler(string property, Product product)
+        public async void AnyPageUpdateHandler(string property, UpdateModel model)
         {
             await InvokeAsync(async () =>
             {
-                foreach (var item in property.Split(",", StringSplitOptions.RemoveEmptyEntries))
+                if (model != null)
                 {
-                    if (item.Equals("product/index"))
+                    if (model.Prefix != null)
                     {
-                        await LoadData(PagingParameter.CurrentPage, null);
+                        var listvm = new List<ProductViewModel>();
+
+                        foreach (var product in products)
+                        {
+                            var item = await ProductService.GetItemsAsync(
+                                filter: x => x.Id == product.Id,
+                                includeProperties: "Prefix,Suffix");
+
+                            if (item.First().PrefixId != null && item.First().PrefixId == model.Prefix.Id)
+                            {
+                                var vm = new ProductViewModel
+                                {
+                                    Id = product.Id,
+                                    Name = model.Prefix.Name + " " +
+                                           item.FirstOrDefault().Name + " " +
+                                           item.FirstOrDefault().Suffix?.Name,
+                                    Group = $"{item.FirstOrDefault().GroupName}",
+                                };
+
+                                listvm.Add(vm);
+                            }
+                            else
+                                listvm.Add(product);
+                        }
+
+                        products.Clear();
+                        products.AddRange(listvm);
                     }
-                    
-                    if(product != null)
+
+                    //========================Suffix Update===========================
+                    if (model.Suffix != null)
                     {
-                        int index = products.FindIndex(x=>x.Id==product.Id);
+                        var listvm = new List<ProductViewModel>();
+
+                        foreach (var product in products)
+                        {
+                            var item = await ProductService.GetItemsAsync(
+                                filter: x => x.Id == product.Id,
+                                includeProperties: "Prefix,Suffix");
+
+                            if (item.First().SuffixId != null && item.First().SuffixId == model.Suffix.Id)
+                            {
+                                var vm = new ProductViewModel
+                                {
+                                    Id = product.Id,
+                                    Name = item.FirstOrDefault().Prefix?.Name + " " +
+                                           item.FirstOrDefault().Name + " " +
+                                           model.Suffix.Name,
+                                    Group = $"{item.FirstOrDefault().GroupName}",
+                                };
+
+                                listvm.Add(vm);
+                            }
+                            else
+                                listvm.Add(product);
+                        }
+
+                        products.Clear();
+                        products.AddRange(listvm);
+                    }
+
+                    //=================Product update =======================
+                    if (model.Product != null)
+                    {
+                        int index = products.FindIndex(x => x.Id == model.Product.Id);
                         products.RemoveAt(index);
 
-                        products.Insert(index,product);
+                        products.Insert(index, model.Product);
+                    }
+                }
+                else
+                {
+                    if (property != null)
+                    {
+                        foreach (var load in property.Split(new char[] { ',' },
+                            StringSplitOptions.RemoveEmptyEntries))
+                        {
+                            if (!isLock && load == "product/index")
+                            {
+                                while (isLock)
+                                {
+                                    Logger.LogInformation("System is busy ...");
+                                    await Task.Delay(100);
+                                }
+
+                                await LoadData(PagingParameter.CurrentPage, null);
+                            }
+                        }
                     }
                 }
 
@@ -123,6 +202,7 @@ namespace InventoryApp.Pages
 
         private async Task CallData(int page, string searchText)
         {
+            isLock = true;
             products.Clear();
 
             if (searchText != null)
@@ -152,6 +232,7 @@ namespace InventoryApp.Pages
             }
 
             Logger.LogInformation("Loading records");
+            isLock = false;
         }
 
         private async Task Delete(Guid id)
@@ -191,15 +272,18 @@ namespace InventoryApp.Pages
                     AlertService.AddMessage(new Alert(product.Name + AlertMessage.DeleteInfo,
                         AlertType.Error));
 
-                    UpdateService.UpdatePage("product/index", null);
+                    UpdateService.UpdatePage();
                 }
             }
         }
 
         public void Dispose()
         {
-            UpdateService.OnUpdateRequested += PageUpdateHandler;
-        }
+            //UpdateService.OnUpdateRequested -= PageUpdateHandler;
+            //UpdateServicePrefix.OnUpdateRequested -= PrefixUpdateHandler;
+            //UpdateServiceSuffix.OnUpdateRequested -= SuffixUpdateHandler;
+            UpdateService.OnUpdateRequested -= AnyPageUpdateHandler;
 
+        }
     }
 }
