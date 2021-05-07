@@ -4,6 +4,7 @@ using InventoryApp.Models.Enums;
 using InventoryApp.Models.ViewModels;
 using InventoryApp.Services;
 using Microsoft.AspNetCore.Components;
+using Microsoft.Extensions.Logging;
 using Microsoft.JSInterop;
 using System;
 using System.Collections.Generic;
@@ -12,32 +13,30 @@ using System.Threading.Tasks;
 
 namespace InventoryApp.Pages
 {
-    public partial class ReceiveReturn
+    public partial class IssueReturn : IDisposable
     {
-        public List<PurchaseReturnViewModel> purchasevm;
-        public List<PageUrl> pageUrlList;
+        public List<SaleReturnViewModel> saleReturnsvm;
         public bool spinnerOnOff = true;
         public IJSObjectReference jsModule;
-        private bool isLock = false;
+        public bool isLock = false;
 
         [Inject]
         public UpdateService<UpdateModel> UpdateService { get; set; }
         [Inject]
-        public PurchaseReturnService PurchaseReturnService { get; set; }
+        public SaleReturnService SaleReturnService { get; set; }
         [Inject]
         private IJSRuntime JSRuntime { get; set; }
         [Inject]
         public AlertService AlertService { get; set; }
+        [Inject]
+        public ILogger<IssueReturn> Logger { get; set; }
+
 
 
 
         protected override async Task OnInitializedAsync()
         {
-            purchasevm = new List<PurchaseReturnViewModel>();
-            pageUrlList = new List<PageUrl>
-            {
-                new PageUrl("receive/detail/", "Details", "oi-list", "btn-outline-info ml-2"),
-            };
+            saleReturnsvm = new List<SaleReturnViewModel>();
 
             UpdateService.OnUpdateRequested += PageUpdateHandler;
 
@@ -48,8 +47,19 @@ namespace InventoryApp.Pages
         {
             await InvokeAsync(async () =>
             {
-                if (!isLock)
-                    await LoadData(PagingParameter.CurrentPage, null);
+                if (model !=null && model.SaleReturn != null)
+                {
+                    if (!isLock)
+                    {
+                        while (isLock)
+                        {
+                            await Task.Delay(100);
+                        }
+
+                        await LoadData(PagingParameter.CurrentPage, null);
+                    }
+                }
+
                 StateHasChanged();
             });
         }
@@ -58,7 +68,7 @@ namespace InventoryApp.Pages
         {
             await CallData(page, searchText);
 
-            PagingParameter.TotalPages = PurchaseReturnService.PageCount();
+            PagingParameter.TotalPages = SaleReturnService.PageCount();
             if (PagingParameter.TotalPages == 0)
             {
                 spinnerOnOff = false;
@@ -69,7 +79,7 @@ namespace InventoryApp.Pages
                 }
             }
 
-            if (purchasevm.Count == 0 && PagingParameter.CurrentPage != 1)
+            if (saleReturnsvm.Count == 0 && PagingParameter.CurrentPage != 1)
             {
                 PagingParameter.CurrentPage -= 1;
                 await CallData(PagingParameter.CurrentPage, null);
@@ -92,48 +102,63 @@ namespace InventoryApp.Pages
         private async Task CallData(int page, string searchText)
         {
             isLock = true;
-            purchasevm.Clear();
+            saleReturnsvm.Clear();
 
             if (searchText != null)
             {
-                await foreach (var item in PurchaseReturnService.StreamListAsync(
-                page,
-                PagingParameter.PageSize,
-                filter: x => x.Product.Name.Contains(searchText),
-                orderBy: o => o.OrderBy(x => x.ReturnDate)
-                    .ThenBy(x => x.Product.Prefix.Name)
-                    .ThenBy(x => x.Product.Name),
-                includeProperties: "Product,Product.Prefix,Product.Suffix"))
+                await foreach (var item in SaleReturnService.StreamListAsync(
+                    page,
+                    PagingParameter.PageSize,
+                    filter: x => x.Product.Name.Contains(searchText),
+                    orderBy: o => o.OrderByDescending(x => x.ReturnDate),
+                    includeProperties: "Product,Product.Prefix,Product.Suffix"))
                 {
-                    purchasevm.Add(item);
+                    var vm = new SaleReturnViewModel
+                    {
+                        Return_Date = item.ReturnDate.ToShortDateString(),
+                        Name = $"{item.Product.Prefix?.Name} {item.Product.Name} {item.Product.Suffix?.Name}",
+                        Qty = item.Quantity,
+                        Retrun_By = item.ReturneBy,
+                        Remarks = item.Remarks,
+                    };
+
+                    saleReturnsvm.Add(item);
                     spinnerOnOff = false;
                     StateHasChanged();
                 }
             }
             else
             {
-                await foreach (var item in PurchaseReturnService.StreamListAsync(
-                page,
-                PagingParameter.PageSize,
-                orderBy: o => o.OrderBy(x => x.ReturnDate)
-                    .ThenBy(x => x.Product.Prefix.Name)
-                    .ThenBy(x => x.Product.Name),
-                includeProperties: "Product,Product.Prefix,Product.Suffix"))
+                await foreach (var item in SaleReturnService.StreamListAsync(
+                    page,
+                    PagingParameter.PageSize,
+                    orderBy: o => o.OrderByDescending(x => x.ReturnDate),
+                    includeProperties: "Product,Product.Prefix,Product.Suffix"))
                 {
-                    purchasevm.Add(item);
+                    var vm = new SaleReturnViewModel
+                    {
+                        Return_Date = item.ReturnDate.ToShortDateString(),
+                        Name = $"{item.Product.Prefix?.Name} {item.Product.Name} " +
+                               $"{item.Product.Suffix?.Name}",
+                        Qty = item.Quantity,
+                        Retrun_By = item.ReturneBy,
+                        Remarks = item.Remarks,
+                    };
+
+                    saleReturnsvm.Add(item);
                     spinnerOnOff = false;
                     StateHasChanged();
                 }
             }
 
-            isLock = true;
+            isLock = false;
         }
 
         private async Task Download()
         {
             jsModule = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/site.js");
-            var prList = await PurchaseReturnService.GetReport();
-            var fileContent = await ExcelReporter<PurchaseReturnViewModel>.GetReports(prList, "Purchase Returns");
+            var prList = await SaleReturnService.GetReport();
+            var fileContent = await ExcelReporter<SaleReturnViewModel>.GetReports(prList, "Sales Returns");
             await jsModule.InvokeVoidAsync("saveAsFile", "Inventory Report.xlsx", Convert.ToBase64String(fileContent));
         }
 

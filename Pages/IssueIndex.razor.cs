@@ -1,3 +1,4 @@
+using Blazored.Modal.Services;
 using InventoryApp.Helpers;
 using InventoryApp.Models;
 using InventoryApp.Models.Enums;
@@ -11,41 +12,43 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-
-
 namespace InventoryApp.Pages
 {
-    public partial class ReceiveIndex : ComponentBase, IDisposable
+    public partial class IssueIndex : IDisposable
     {
-        public List<ReceiveViewModel> receivevm;
-        public List<PageUrl> pageUrlList;
+        public List<IssueViewModel> issuevm;
         public bool spinnerOnOff = true;
+        public List<PageUrl> pageUrlList;
         public IJSObjectReference jsModule;
+        public string title = "Issue-index";
         private bool isLock = false;
+
+        [Parameter]
+        public Guid Id { get; set; }
+        [CascadingParameter]
+        IModalService Modal { get; set; }
 
         [Inject]
         private AlertService AlertService { get; set; }
         [Inject]
         private UpdateService<UpdateModel> UpdateService { get; set; }
         [Inject]
-        private ReceiveService ReceiveService { get; set; }
+        private IssueService IssueService { get; set; }
         [Inject]
         private IJSRuntime JSRuntime { get; set; }
         [Inject]
-        private ILogger<ReceiveIndex> Logger { get; set; }
+        private NavigationManager NavigationManager { get; set; }
         [Inject]
-        public NavigationManager NavigationManager { get; set; }
-
+        private ILogger<IssueIndex> Logger { get; set; }
 
 
 
         protected override async Task OnInitializedAsync()
         {
-            receivevm = new List<ReceiveViewModel>();
-
+            issuevm = new List<IssueViewModel>();
             pageUrlList = new List<PageUrl>
             {
-                new PageUrl("receive/detail/", "Open", "oi-external-link", "btn-outline-info ml-2")
+                new PageUrl("issue/detail/", "Open", "oi-external-link", "btn-outline-info ml-2")
             };
 
             UpdateService.OnUpdateRequested += PageUpdateHandler;
@@ -60,17 +63,13 @@ namespace InventoryApp.Pages
                 if (model != null)
                 {
                     if (model.Prefix != null)
-                        NavigationManager.NavigateTo("/receive/index", true);
+                        NavigationManager.NavigateTo("/issue/index", true);
 
                     if (model.Suffix != null)
-                        NavigationManager.NavigateTo("/receive/index", true);
+                        NavigationManager.NavigateTo("/issue/index", true);
 
-                    if (model.Receive != null)
-                    {
-                        int index = receivevm.FindIndex(x => x.Id == model.Receive.Id);
-                        receivevm.RemoveAt(index);
-                        receivevm.Insert(index, model.Receive);
-                    }
+                    if (model.Issue != null)
+                        await LoadData(PagingParameter.CurrentPage, null);
                 }
                 else
                 {
@@ -87,7 +86,7 @@ namespace InventoryApp.Pages
                                     await Task.Delay(100);
                                 }
 
-                                if (load == "receive/index")
+                                if (load == "issue/index")
                                     await LoadData(PagingParameter.CurrentPage, null);
                             }
                         }
@@ -101,7 +100,8 @@ namespace InventoryApp.Pages
         private async Task LoadData(int page, string searchText)
         {
             await CallData(page, searchText);
-            PagingParameter.TotalPages = ReceiveService.PageCount();
+
+            PagingParameter.TotalPages = IssueService.PageCount();
             if (PagingParameter.TotalPages == 0)
             {
                 spinnerOnOff = false;
@@ -112,14 +112,14 @@ namespace InventoryApp.Pages
                 }
             }
 
-            if (receivevm.Count == 0 && PagingParameter.CurrentPage != 1)
+            if (issuevm.Count == 0 && PagingParameter.CurrentPage != 1)
             {
                 PagingParameter.CurrentPage -= 1;
                 await CallData(PagingParameter.CurrentPage, null);
             }
         }
 
-        //EventCallback for paging navigation linkmo
+        //EventCallback for paging navigation link
         public async Task SelectedPage(int page)
         {
             PagingParameter.CurrentPage = page;
@@ -135,57 +135,51 @@ namespace InventoryApp.Pages
         private async Task CallData(int page, string searchText)
         {
             isLock = true;
-            receivevm.Clear();
+            issuevm.Clear();
 
             if (searchText != null)
             {
-                await foreach (var item in ReceiveService.StreamListAsync(
-                    page,
-                    PagingParameter.PageSize,
-                    filter: x => x.Product.Name.Contains(searchText) &&
-                                 x.IsDelete != true,
-                    orderBy: o => o.OrderByDescending(x => x.ReceiveDate)
+                await foreach (var item in IssueService.StreamListAsync(
+               page,
+               PagingParameter.PageSize,
+               filter: x => x.Product.Name.Contains(searchText) &&
+                            x.IsDelete != true,
+               orderBy: o => o.OrderBy(x => x.Product.Prefix.Name)
                                     .ThenBy(x => x.Product.Prefix.Name)
-                                    .ThenBy(x => x.Product.Name),
-                    includeProperties: "Product,Product.Prefix,Product.Suffix"))
+                                    .ThenByDescending(x => x.IssueDate),
+               includeProperties: "Product,Product.Prefix,Product.Suffix"))
                 {
-                    receivevm.Add(item);
+                    issuevm.Add(item);
                     spinnerOnOff = false;
                     StateHasChanged();
                 }
             }
             else
             {
-                await foreach (var item in ReceiveService.StreamListAsync(
-                                    page,
-                                    PagingParameter.PageSize,
-                                    filter: x => x.IsDelete != true,
-                                    orderBy: o => o.OrderByDescending(x => x.ReceiveDate)
-                                                    .ThenBy(x => x.Product.Prefix.Name)
-                                                    .ThenBy(x => x.Product.Name),
-                                    includeProperties: "Product,Product.Prefix,Product.Suffix"))
+                await foreach (var item in IssueService.StreamListAsync(
+                    page,
+                    PagingParameter.PageSize,
+                    filter: x => x.IsDelete != true,
+                    orderBy: o => o.OrderBy(x => x.Product.Prefix.Name)
+                                    .ThenBy(x => x.Product.Prefix.Name)
+                                    .ThenByDescending(x => x.IssueDate),
+                    includeProperties: "Product,Product.Prefix,Product.Suffix"))
                 {
-                    receivevm.Add(item);
+                    issuevm.Add(item);
                     spinnerOnOff = false;
                     StateHasChanged();
                 }
             }
 
-            Logger.LogInformation("Receive list loaded!");
             isLock = false;
         }
 
         private async Task Download()
         {
             jsModule = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/site.js");
-            var receiveList = await ReceiveService.GetReportData();
-            var fileContent = await ExcelReporter<ReceiveReportViewModel>.GetReports(receiveList,
-                "Purchase List");
-
-            await jsModule.InvokeVoidAsync("saveAsFile", "Inventory Report.xlsx",
-                Convert.ToBase64String(fileContent));
-
-            Logger.LogInformation("Records download complete");
+            var issueList = await IssueService.GetReport();
+            var fileContent = await ExcelReporter<IssueReportViewModel>.GetReports(issueList, "Issue List");
+            await jsModule.InvokeVoidAsync("saveAsFile", "Inventory Report.xlsx", Convert.ToBase64String(fileContent));
         }
 
         public void Dispose()

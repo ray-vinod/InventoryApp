@@ -2,7 +2,6 @@ using InventoryApp.Models;
 using InventoryApp.Models.Enums;
 using InventoryApp.Services;
 using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -29,11 +28,7 @@ namespace InventoryApp.Pages
         public Guid Id { get; set; }
 
         [Inject]
-        private UpdateService<Receive> ReceiveUpdateService { get; set; }
-        [Inject]
-        private UpdateService<Product> ProductUpdateService { get; set; }
-        [Inject]
-        private ProtectedLocalStorage LocalStorage { get; set; }
+        private UpdateService<UpdateModel> UpdateService { get; set; }
         [Inject]
         private NavigationManager NavigationManager { get; set; }
         [Inject]
@@ -52,6 +47,7 @@ namespace InventoryApp.Pages
         public ILogger<ReceiveCreate> Logger { get; set; }
 
 
+
         Product ProductSelection
         {
             get => receive.Product;
@@ -65,12 +61,11 @@ namespace InventoryApp.Pages
             }
         }
 
-
         protected override async Task OnInitializedAsync()
         {
             receive = new Receive();
 
-            ProductUpdateService.OnUpdateRequested += ProductUpdateHandler;
+            UpdateService.OnUpdateRequested += PageUpdateHandler;
 
             await LoadProduct();
 
@@ -112,29 +107,44 @@ namespace InventoryApp.Pages
         }
 
         //Product list auto refresh
-        private async void ProductUpdateHandler(Product product)
+        private async void PageUpdateHandler(string property, UpdateModel model)
         {
             await InvokeAsync(async () =>
             {
-                if (product != null)
+                if (model != null)
                 {
-                    int index = products.FindIndex(x => x.Id == product.Id);
-                    products.RemoveAt(index);
-                    
-                    products.Insert(index, product);
+                    if (model.Prefix != null)
+                        NavigationManager.NavigateTo("/receive/create", true);
+
+                    if (model.Suffix != null)
+                        NavigationManager.NavigateTo("/receive/create", true);
+
+                    if (model.Product != null)
+                    {
+                        int index = products.FindIndex(x => x.Id == model.Product.Id);
+                        products.RemoveAt(index);
+                        products.Insert(index, model.Product);
+                    }
                 }
                 else
                 {
-                    if (!isLock)
+                    if (property != null)
                     {
-                        //preventing second operation
-                        while (isLock)
+                        foreach (var load in property.Split(new char[] { ',' },
+                            StringSplitOptions.RemoveEmptyEntries))
                         {
-                            Logger.LogInformation("System is busy ...");
-                            await Task.Delay(100);
-                        }
+                            if (!isLock)
+                            {
+                                while (isLock)
+                                {
+                                    Logger.LogInformation("System is busy ...");
+                                    await Task.Delay(100);
+                                }
 
-                        await LoadProduct();
+                                if (load == "product/index")
+                                    await LoadProduct();
+                            }
+                        }
                     }
                 }
 
@@ -157,8 +167,6 @@ namespace InventoryApp.Pages
 
         private async Task AddEditReturn()
         {
-            string msg = receive.Product.Name;
-
             if (IsDisable)
             {
                 //Return Purchase Item
@@ -204,10 +212,10 @@ namespace InventoryApp.Pages
                     Logger.LogInformation("Receive table updated");
                     Logger.LogInformation("Purchase Return task completed!");
 
-                    AlertService.AddMessage(new Alert($"{msg} add to purchase return list",
+                    AlertService.AddMessage(new Alert($"{receive.Product.Name} add to purchase return list",
                         AlertType.Success));
 
-                    ReceiveUpdateService.UpdatePage(isUpdate);
+                    UpdateService.UpdatePage(entity: new UpdateModel { Receive = isUpdate });
                     NavigationManager.NavigateTo("/receive/index", false);
                 }
                 else
@@ -242,9 +250,10 @@ namespace InventoryApp.Pages
 
                     Logger.LogInformation("Item received and updated stock!");
 
-                    AlertService.AddMessage(new Alert(msg + AlertMessage.AddInfo, AlertType.Success));
+                    AlertService.AddMessage(new Alert(receive.Product.Name + AlertMessage.AddInfo, AlertType.Success));
 
-                    ReceiveUpdateService.UpdatePage();
+                    //Refresh page list
+                    UpdateService.UpdatePage("receive/index");
 
                     receive = new Receive();
                     ReadUserName();
@@ -257,11 +266,11 @@ namespace InventoryApp.Pages
 
                     var isUpdate = await ReceiveService.UpdateAsync(receive);
 
-                    Logger.LogInformation($"{receive.Product.Name} is updated!");
+                    Logger.LogInformation($"{isUpdate.Product.Name} is updated!");
 
-                    AlertService.AddMessage(new Alert(msg + AlertMessage.UpdateInfo, AlertType.Success));
+                    AlertService.AddMessage(new Alert(isUpdate.Product.Name + AlertMessage.UpdateInfo, AlertType.Success));
 
-                    ReceiveUpdateService.UpdatePage(isUpdate);
+                    UpdateService.UpdatePage(entity: new UpdateModel { Receive = isUpdate });
 
                     IsEdit = false;
                     receive = new Receive();
@@ -281,6 +290,7 @@ namespace InventoryApp.Pages
         {
             int getbatch = await ReceiveService.GetBatch(product.Id);
             receive.Batch = getbatch + 1;
+
             StateHasChanged();
         }
 
@@ -338,7 +348,7 @@ namespace InventoryApp.Pages
 
         public void Dispose()
         {
-            ProductUpdateService.OnUpdateRequested -= ProductUpdateHandler;
+            UpdateService.OnUpdateRequested -= PageUpdateHandler;
         }
     }
 }

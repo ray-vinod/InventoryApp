@@ -1,7 +1,6 @@
 using Blazored.Modal;
 using Blazored.Modal.Services;
 using InventoryApp.Components;
-using InventoryApp.Data;
 using InventoryApp.Helpers;
 using InventoryApp.Models;
 using InventoryApp.Models.Enums;
@@ -15,7 +14,7 @@ using System.Threading.Tasks;
 
 namespace InventoryApp.Pages
 {
-    public partial class PrefixIndex : IDisposable
+    public partial class PrefixIndex :ComponentBase, IDisposable
     {
         //Local varialbels
         public List<Prefix> prefixes;
@@ -24,15 +23,12 @@ namespace InventoryApp.Pages
         private bool isLock = false;
 
         [CascadingParameter] IModalService Modal { get; set; }
-        [Inject] public PrefixService PrefixService { get; set; }
-        [Inject] public ApplicationDbContext Context { get; set; }
 
-        //Refresh Product Create and Index page
+        [Inject] public PrefixService PrefixService { get; set; }
         [Inject] public AlertService AlertService { get; set; }
         [Inject] public ILogger<PrefixIndex> Logger { get; set; }
         [Inject] public NavigationManager NavigationManager { get; set; }
-        [Inject] public UpdateService<Prefix> UpdateService { get; set; }
-
+        [Inject] public UpdateService<UpdateModel> UpdateService { get; set; }
 
 
         protected override async Task OnInitializedAsync()
@@ -47,30 +43,35 @@ namespace InventoryApp.Pages
             await LoadData(PagingParameter.CurrentPage, null);
         }
 
-        public async void PageUpdateHandler(Prefix prefix)
+        private async void PageUpdateHandler(string property, UpdateModel model)
         {
             await InvokeAsync(async () =>
             {
-                if (prefix != null)
+                if (model != null && model.Prefix != null)
                 {
                     //find index of list and remove
-                    int index = prefixes.FindIndex(x => x.Id == prefix.Id);
+                    int index = prefixes.FindIndex(x => x.Id == model.Prefix.Id);
                     prefixes.RemoveAt(index);
 
                     //find the updated entity and add to list at index
-                    prefixes.Insert(index, prefix);
+                    prefixes.Insert(index, model.Prefix);
                 }
-                else
-                {
-                    if(!isLock)
-                    {
-                        while (isLock)
-                        {
-                            Logger.LogInformation("System is busy ...");
-                            await Task.Delay(100);
-                        }
 
-                        await LoadData(PagingParameter.CurrentPage, null);
+                if (model == null && property !=null)
+                {
+                    foreach (var load in property.Split(new char[] { ',' },
+                        StringSplitOptions.RemoveEmptyEntries))
+                    {
+                        if (!isLock && load == "prefix/index")
+                        {
+                            while (isLock)
+                            {
+                                Logger.LogInformation("System is busy ...");
+                                await Task.Delay(100);
+                            }
+
+                            await LoadData(PagingParameter.CurrentPage, null);
+                        }
                     }
                 }
 
@@ -137,7 +138,7 @@ namespace InventoryApp.Pages
                     AlertService.AddMessage(new Alert(prefix.Name + AlertMessage.DeleteInfo,
                         AlertType.Error));
 
-                    UpdateService.UpdatePage();
+                    UpdateService.UpdatePage("prefix/index");
                 }
             }
         }
