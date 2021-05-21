@@ -47,17 +47,9 @@ namespace InventoryApp.Pages
         {
             await InvokeAsync(async () =>
             {
-                if (model !=null && model.SaleReturn != null)
+                if (model != null && model.SaleReturn != null)
                 {
-                    if (!isLock)
-                    {
-                        while (isLock)
-                        {
-                            await Task.Delay(100);
-                        }
-
-                        await LoadData(PagingParameter.CurrentPage, null);
-                    }
+                    await LoadData(PagingParameter.CurrentPage, null);
                 }
 
                 StateHasChanged();
@@ -66,7 +58,15 @@ namespace InventoryApp.Pages
 
         private async Task LoadData(int page, string searchText)
         {
-            await CallData(page, searchText);
+            if (!isLock)
+            {
+                while (isLock)
+                {
+                    Logger.LogInformation("System is busy ...");
+                    await Task.Delay(100);
+                }
+                await CallData(page, searchText);
+            }
 
             PagingParameter.TotalPages = SaleReturnService.PageCount();
             if (PagingParameter.TotalPages == 0)

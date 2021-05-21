@@ -14,7 +14,7 @@ using System.Threading.Tasks;
 
 namespace InventoryApp.Pages
 {
-    public partial class PrefixIndex :ComponentBase, IDisposable
+    public partial class PrefixIndex : ComponentBase, IDisposable
     {
         //Local varialbels
         public List<Prefix> prefixes;
@@ -57,7 +57,7 @@ namespace InventoryApp.Pages
                     prefixes.Insert(index, model.Prefix);
                 }
 
-                if (model == null && property !=null)
+                if (model == null && property != null)
                 {
                     foreach (var load in property.Split(new char[] { ',' },
                         StringSplitOptions.RemoveEmptyEntries))
@@ -81,7 +81,14 @@ namespace InventoryApp.Pages
 
         private async Task LoadData(int page, string searchText)
         {
-            await CallData(page, searchText);
+            if (!isLock)
+            {
+                while (isLock)
+                {
+                    await Task.Delay(100);
+                }
+                await CallData(page, searchText);
+            }
 
             PagingParameter.TotalPages = PrefixService.PageCount();
 

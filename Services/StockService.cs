@@ -17,11 +17,8 @@ namespace InventoryApp.Services
             get { return _context as ApplicationDbContext; }
         }
 
-        private readonly ApplicationDbContext _db;
-
         public StockService(ApplicationDbContext context) : base(context)
         {
-            _db = context;
         }
 
         public async Task<List<StockViewModel>> GetStockReport()
@@ -113,7 +110,7 @@ namespace InventoryApp.Services
                 };
 
                 int availableQty = receive.Quantity - receive.UseQuantity;
-               
+
                 if (entity.Quantity >= availableQty)
                 {
                     //for the loop runs
@@ -122,7 +119,7 @@ namespace InventoryApp.Services
                     //update receive
                     receive.UseQuantity = 0;
                     receive.IsUse = true;
-                    
+
                     //update issue
                     issue.Quantity += availableQty;
 
@@ -154,7 +151,7 @@ namespace InventoryApp.Services
                 Context.Stocks.Update(stock);
                 Context.SaveChanges();
             }
-            
+
             return true;
         }
     }

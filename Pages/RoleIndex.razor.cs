@@ -17,6 +17,7 @@ namespace InventoryApp.Pages
     {
         public bool spinnerOnOff = true;
         public List<RoleViewModel> roleModels;
+        public bool isLock = false;
 
         List<PageUrl> urls = new List<PageUrl>();
         [Inject] private RoleManager<ApplicationRole> RoleManager { get; set; }
@@ -49,7 +50,14 @@ namespace InventoryApp.Pages
 
         private async Task LoadDataAsync(int page, string searchText)
         {
-            await CallDataAsync(page, searchText);
+            if (!isLock)
+            {
+                while (isLock)
+                {
+                    await Task.Delay(100);
+                }
+                await CallDataAsync(page, searchText);
+            }
 
             PagingParameter.TotalPages = PaginatedList<ApplicationRole>.TotalPage();
 
@@ -72,6 +80,7 @@ namespace InventoryApp.Pages
 
         private async Task CallDataAsync(int page, string searchText)
         {
+            isLock = true;
             roleModels.Clear();
             var roles = RoleManager.Roles;
 
@@ -98,6 +107,7 @@ namespace InventoryApp.Pages
 
             spinnerOnOff = false;
             PagingParameter.TotalPages = roleModels.Count;
+            isLock = false;
         }
 
         private async Task DeleteAsync(Guid id)

@@ -26,7 +26,6 @@ namespace InventoryApp.Pages
         [Parameter]
         public Guid Id { get; set; }
         [CascadingParameter]
-        IModalService Modal { get; set; }
 
         [Inject]
         private AlertService AlertService { get; set; }
@@ -78,17 +77,8 @@ namespace InventoryApp.Pages
                         foreach (var load in property.Split(new char[] { ',' },
                             StringSplitOptions.RemoveEmptyEntries))
                         {
-                            if (!isLock)
-                            {
-                                while (isLock)
-                                {
-                                    Logger.LogInformation("System is busy ...");
-                                    await Task.Delay(100);
-                                }
-
-                                if (load == "issue/index")
-                                    await LoadData(PagingParameter.CurrentPage, null);
-                            }
+                            if (load == "issue/index")
+                                await LoadData(PagingParameter.CurrentPage, null);
                         }
                     }
                 }
@@ -99,7 +89,15 @@ namespace InventoryApp.Pages
 
         private async Task LoadData(int page, string searchText)
         {
-            await CallData(page, searchText);
+            if (!isLock)
+            {
+                while (isLock)
+                {
+                    Logger.LogInformation("System is busy ...");
+                    await Task.Delay(100);
+                }
+                await CallData(page, searchText);
+            }
 
             PagingParameter.TotalPages = IssueService.PageCount();
             if (PagingParameter.TotalPages == 0)

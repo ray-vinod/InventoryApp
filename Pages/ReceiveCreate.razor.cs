@@ -191,8 +191,9 @@ namespace InventoryApp.Pages
 
                     //Stock update
                     stock.TotalReceiveReturn += receive.Quantity;
-                    stock.InStock = (stock.TotalReceive - stock.TotalReceiveReturn) -
-                        (stock.TotalIssue - stock.TotalIssueReturn);
+                    int receiveQty = stock.TotalReceive - stock.TotalReceiveReturn;
+                    int issueQty = stock.TotalIssue - stock.TotalIssueReturn;
+                    stock.InStock = receiveQty - issueQty;
                     await StockService.UpdateAsync(stock);
                     Logger.LogInformation("Stock updated");
 
@@ -208,21 +209,20 @@ namespace InventoryApp.Pages
                         receive.UseQuantity = 0;
                     }
 
-                    var isUpdate = await ReceiveService.UpdateAsync(receive);
+                    await ReceiveService.UpdateAsync(receive);
                     Logger.LogInformation("Receive table updated");
                     Logger.LogInformation("Purchase Return task completed!");
 
-                    AlertService.AddMessage(new Alert($"{receive.Product.Name} add to purchase return list",
-                        AlertType.Success));
+                    UpdateService.UpdatePage(entity: new UpdateModel { PurchaseReturn = purchaseReturn });
 
-                    UpdateService.UpdatePage(entity: new UpdateModel { Receive = isUpdate });
+                    AlertService.AddMessage(new Alert($"{receive.Product.Name} add to purchase return list", AlertType.Success));
+
                     NavigationManager.NavigateTo("/receive/index", false);
                 }
                 else
                 {
                     Logger.LogInformation("Quantity is not available as you want!");
-                    AlertService.AddMessage(new Alert("Quantity is not available as you want!",
-                        AlertType.Error));
+                    AlertService.AddMessage(new Alert("Quantity is not available as you want!", AlertType.Error));
                     return;
                 }
 
@@ -250,10 +250,10 @@ namespace InventoryApp.Pages
 
                     Logger.LogInformation("Item received and updated stock!");
 
-                    AlertService.AddMessage(new Alert(receive.Product.Name + AlertMessage.AddInfo, AlertType.Success));
-
                     //Refresh page list
-                    UpdateService.UpdatePage("receive/index");
+                    UpdateService.UpdatePage("create", new UpdateModel { Receive = receive });
+
+                    AlertService.AddMessage(new Alert(receive.Product.Name + AlertMessage.AddInfo, AlertType.Success));
 
                     receive = new Receive();
                     ReadUserName();
