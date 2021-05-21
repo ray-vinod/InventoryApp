@@ -60,39 +60,73 @@ namespace InventoryApp.Pages
 
                     if (model.SaleReturn != null)
                     {
-                        int index = stocks.FindIndex(x => x.Id == model.SaleReturn.ProductId);
                         var stock = stocks.Find(x => x.Id == model.SaleReturn.ProductId);
+                        if (stock != null)
+                        {
+                            stock.TotalIssueReturn += model.SaleReturn.Quantity;
+                            stock.InStock += model.SaleReturn.Quantity;
 
-                        stock.TotalIssueReturn += model.SaleReturn.Quantity;
-                        stock.InStock += model.SaleReturn.Quantity;
-
-                        stocks.RemoveAt(index);
-                        stocks.Insert(index, stock);
+                            UpdateStock(model.SaleReturn.ProductId, stock);
+                        }
+                        else
+                            await LoadData(PagingParameter.CurrentPage, null);
                     }
 
                     if (model.Issue != null)
                     {
-                        int index = stocks.FindIndex(x => x.Id == model.Issue.ProductId);
                         var stock = stocks.Find(x => x.Id == model.Issue.ProductId);
-
-                        stock.TotalIssue += model.Issue.Quantity;
-                        stock.InStock -= model.Issue.Quantity;
-
-                        stocks.RemoveAt(index);
-                        stocks.Insert(index, stock);
-                    }
-                }
-                else
-                {
-                    if (!isLock)
-                    {
-                        while (isLock)
+                        if (stock != null)
                         {
-                            Logger.LogInformation("System is busy ...");
-                            await Task.Delay(100);
-                        }
+                            stock.TotalIssue += model.Issue.Quantity;
+                            stock.InStock -= model.Issue.Quantity;
 
-                        await LoadData(PagingParameter.CurrentPage, null);
+                            UpdateStock(model.Issue.ProductId, stock);
+                        }
+                        else
+                            await LoadData(PagingParameter.CurrentPage, null);
+                    }
+
+                    if (model.Receive != null && property.Equals("create"))
+                    {
+                        var stock = stocks.Find(x => x.Id == model.Receive.ProductId);
+                        if (stock != null)
+                        {
+                            stock.TotalReceive += model.Receive.Quantity;
+                            stock.InStock += model.Receive.Quantity;
+
+                            UpdateStock(model.Receive.ProductId, stock);
+                        }
+                        else
+                            await LoadData(PagingParameter.CurrentPage, null);
+                    }
+
+                    if (model.PurchaseReturn != null)
+                    {
+                        var stock = stocks.Find(x => x.Id == model.PurchaseReturn.ProductId);
+                        if (stock != null)
+                        {
+                            stock.TotalReceiveReturn += model.PurchaseReturn.Quantity;
+                            stock.InStock -= model.PurchaseReturn.Quantity;
+
+                            UpdateStock(model.PurchaseReturn.ProductId, stock);
+                        }
+                        else
+                            await LoadData(PagingParameter.CurrentPage, null);
+                    }
+
+                    //Purchase Entry Cancel
+                    if (model.Receive !=null && property.Equals("cancel"))
+                    {
+                        var stock = stocks.Find(x => x.Id == model.Receive.ProductId);
+                        if (stock != null)
+                        {
+                            stock.TotalReceive -= model.Receive.Quantity;
+                            stock.InStock -= model.Receive.Quantity;
+
+                            UpdateStock(model.Receive.ProductId, stock);
+                        }
+                        else
+                            await LoadData(PagingParameter.CurrentPage, null);
                     }
                 }
 
@@ -100,9 +134,25 @@ namespace InventoryApp.Pages
             });
         }
 
+        private void UpdateStock(Guid id, Stock stock)
+        {
+            int index = stocks.FindIndex(x => x.Id == id);
+
+            stocks.RemoveAt(index);
+            stocks.Insert(index, stock);
+        }
+
         private async Task LoadData(int page, string searchText)
         {
-            await CallData(page, searchText);
+            if (!isLock)
+            {
+                while (isLock)
+                {
+                    Logger.LogInformation("System is busy ...");
+                    await Task.Delay(100);
+                }
+                await CallData(page, searchText);
+            }
 
             PagingParameter.TotalPages = StockService.PageCount();
             if (PagingParameter.TotalPages == 0)
@@ -127,7 +177,6 @@ namespace InventoryApp.Pages
         {
             isLock = true;
             stocks.Clear();
-
             await Task.Delay(100);
 
             if (searchText != null)

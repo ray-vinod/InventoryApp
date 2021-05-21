@@ -60,7 +60,7 @@ namespace InventoryApp.Pages
                     //NavigationManager.NavigateTo("/suffix/index", true);
                 }
 
-                if (model == null && property !=null)
+                if (model == null && property != null)
                 {
                     foreach (var load in property.Split(new char[] { ',' },
                         StringSplitOptions.RemoveEmptyEntries))
@@ -84,7 +84,14 @@ namespace InventoryApp.Pages
 
         private async Task LoadData(int page, string searchText)
         {
-            await CallData(page, searchText);
+            if (!isLock)
+            {
+                while (isLock)
+                {
+                    await Task.Delay(100);
+                }
+                await CallData(page, searchText);
+            }
 
             PagingParameter.TotalPages = SuffixService.PageCount();
 

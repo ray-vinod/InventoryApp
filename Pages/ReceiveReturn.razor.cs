@@ -4,6 +4,7 @@ using InventoryApp.Models.Enums;
 using InventoryApp.Models.ViewModels;
 using InventoryApp.Services;
 using Microsoft.AspNetCore.Components;
+using Microsoft.Extensions.Logging;
 using Microsoft.JSInterop;
 using System;
 using System.Collections.Generic;
@@ -28,6 +29,8 @@ namespace InventoryApp.Pages
         private IJSRuntime JSRuntime { get; set; }
         [Inject]
         public AlertService AlertService { get; set; }
+        [Inject]
+        public ILogger<ReceiveReturn> Logger { get; set; }
 
 
 
@@ -48,15 +51,26 @@ namespace InventoryApp.Pages
         {
             await InvokeAsync(async () =>
             {
-                if (!isLock)
+                if (model != null && model.PurchaseReturn != null)
+                {
                     await LoadData(PagingParameter.CurrentPage, null);
-                StateHasChanged();
+                    StateHasChanged();
+                }
             });
         }
 
         private async Task LoadData(int page, string searchText)
         {
-            await CallData(page, searchText);
+            if (!isLock)
+            {
+                while (isLock)
+                {
+                    Logger.LogInformation("System is busy ...");
+                    await Task.Delay(100);
+                }
+
+                await CallData(page, searchText);
+            }
 
             PagingParameter.TotalPages = PurchaseReturnService.PageCount();
             if (PagingParameter.TotalPages == 0)
@@ -126,7 +140,7 @@ namespace InventoryApp.Pages
                 }
             }
 
-            isLock = true;
+            isLock = false;
         }
 
         private async Task Download()

@@ -57,7 +57,8 @@ namespace InventoryApp.Pages
         {
             await InvokeAsync(async () =>
             {
-                if (model != null)
+                //On Record update
+                if (property == null && model != null)
                 {
                     if (model.Prefix != null)
                         NavigationManager.NavigateTo("/receive/index", true);
@@ -65,32 +66,30 @@ namespace InventoryApp.Pages
                     if (model.Suffix != null)
                         NavigationManager.NavigateTo("/receive/index", true);
 
-                    if (model.Receive != null)
+                    if (model.Receive != null && property == null)
                     {
                         int index = receivevm.FindIndex(x => x.Id == model.Receive.Id);
                         receivevm.RemoveAt(index);
                         receivevm.Insert(index, model.Receive);
                     }
-                }
-                else
-                {
-                    if (property != null)
-                    {
-                        foreach (var load in property.Split(new char[] { ',' },
-                            StringSplitOptions.RemoveEmptyEntries))
-                        {
-                            if (!isLock)
-                            {
-                                while (isLock)
-                                {
-                                    Logger.LogInformation("System is busy ...");
-                                    await Task.Delay(100);
-                                }
 
-                                if (load == "receive/index")
-                                    await LoadData(PagingParameter.CurrentPage, null);
-                            }
-                        }
+                    //hard refresh
+                    if (model.PurchaseReturn != null)
+                        NavigationManager.NavigateTo("/receive/index",true);
+                }
+
+                //On Record Create
+                if (property != null)
+                {
+                    foreach (var load in property.Split(new char[] { ',' },
+                        StringSplitOptions.RemoveEmptyEntries))
+                    {
+                        if (load == "create")
+                            await LoadData(PagingParameter.CurrentPage, null);
+
+                        //hard refresh
+                        if (load == "cancel")
+                            NavigationManager.NavigateTo("/receive/index",true);
                     }
                 }
 
@@ -100,7 +99,17 @@ namespace InventoryApp.Pages
 
         private async Task LoadData(int page, string searchText)
         {
-            await CallData(page, searchText);
+            if (!isLock)
+            {
+                while (isLock)
+                {
+                    Logger.LogInformation("System is busy ...");
+                    await Task.Delay(100);
+                }
+
+                await CallData(page, searchText);
+            }
+
             PagingParameter.TotalPages = ReceiveService.PageCount();
             if (PagingParameter.TotalPages == 0)
             {
@@ -115,7 +124,8 @@ namespace InventoryApp.Pages
             if (receivevm.Count == 0 && PagingParameter.CurrentPage != 1)
             {
                 PagingParameter.CurrentPage -= 1;
-                await CallData(PagingParameter.CurrentPage, null);
+                if (!isLock)
+                    await CallData(PagingParameter.CurrentPage, null);
             }
         }
 
