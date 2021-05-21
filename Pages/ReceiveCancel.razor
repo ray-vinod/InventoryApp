@@ -1,0 +1,27 @@
+﻿@page "/receive/cancel"
+@page "/receive/abort"
+@page "/receive/abort/{id:guid}"
+@layout MainLayout
+@attribute [Authorize(Roles = "SuperAdmin")]
+
+<Title Value="@title"></Title>
+
+
+<Card Title="List of all Request for Cancel Entery">
+    @*Tabel display data form generic type Tablecomponent*@
+    <Table Items="receivevm"
+           CssClass="table-striped text-center"
+           ShowHideSpinner="spinnerOnOff"
+           RecordCount="PagingParameter.TotalPages"
+           ColsToExcludeCSV="LifeSpan,IsUsed,Name,Qty"
+           OnClickEvnt="Delete"
+           PageUrls="pageUrlList" />
+
+    @if (PagingParameter.TotalPages != 0)
+    {
+        @*Buttom of the table pagination link using PaginationComponent*@
+        <PageLink CurrentPage="PagingParameter.CurrentPage"
+                TotalPage="PagingParameter.TotalPages"
+                SelectedPage="SelectedPage" />
+    }
+</Card>

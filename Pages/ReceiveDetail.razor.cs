@@ -33,6 +33,8 @@ namespace InventoryApp.Pages
         public AlertService AlertService { get; set; }
         [Inject]
         private ILogger<ReceiveDetail> Logger { get; set; }
+        [Inject]
+        public UpdateService<UpdateModel> UpdateService { get; set; }
 
 
         protected override async Task OnInitializedAsync()
@@ -86,14 +88,16 @@ namespace InventoryApp.Pages
 
                 if (isUpdateEntity != null)
                 {
+                    UpdateService.UpdatePage(property:"toCancel");
+                    //UpdateService.UpdatePage(entity:new UpdateModel{ Receive=isUpdateEntity});
+
                     Logger.LogInformation("{0} request for cancel requested", receive.Product.Name);
-
-                    AlertService.AddMessage(new Alert("Request for cancel entry has been sent!",
-                        AlertType.Info));
-
+                    AlertService.AddMessage(new Alert("Request for cancel entry has been sent!", AlertType.Info));
                     NavigationManager.NavigateTo("/receive/index", false);
                 }
             }
         }
+
+
     }
 }

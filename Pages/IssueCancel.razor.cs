@@ -7,6 +7,7 @@ using InventoryApp.Models.Enums;
 using InventoryApp.Models.ViewModels;
 using InventoryApp.Services;
 using Microsoft.AspNetCore.Components;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -40,6 +41,9 @@ namespace InventoryApp.Pages
         private ReceiveService ReceiveService { get; set; }
         [Inject]
         private NavigationManager NavigationManager { get; set; }
+        [Inject]
+        public ILogger<IssueCancel> Logger { get; set; }
+
 
 
 
@@ -71,16 +75,7 @@ namespace InventoryApp.Pages
             {
                 if (model != null && model.Issue != null && model.Issue.Note != null)
                 {
-                    if (!isLock)
-                    {
-                        while (isLock)
-                        {
-                            await Task.Delay(100);
-                        }
-
-                        await LoadData(PagingParameter.CurrentPage);
-                    }
-
+                    await LoadData(PagingParameter.CurrentPage);
                     StateHasChanged();
                 }
             });
@@ -88,7 +83,16 @@ namespace InventoryApp.Pages
 
         private async Task LoadData(int page)
         {
-            await CallData(page);
+            if (!isLock)
+            {
+                while (isLock)
+                {
+                    Logger.LogInformation("System is busy ...");
+                    await Task.Delay(100);
+                }
+
+                await CallData(page);
+            }
 
             PagingParameter.TotalPages = IssueService.PageCount();
             if (PagingParameter.TotalPages == 0)
