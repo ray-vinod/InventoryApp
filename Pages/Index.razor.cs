@@ -1,41 +1,27 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Components;
-using System.Net.Http;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Components.Authorization;
-using Microsoft.AspNetCore.Components.Forms;
-using Microsoft.AspNetCore.Components.Routing;
-using Microsoft.AspNetCore.Components.Web;
-using Microsoft.AspNetCore.Components.Web.Virtualization;
-using Microsoft.JSInterop;
-using InventoryApp;
-using InventoryApp.Data;
-using InventoryApp.Components;
 using InventoryApp.Models;
-using InventoryApp.Models.Enums;
-using InventoryApp.Services;
-using InventoryApp.Shared;
+using InventoryApp.RefreshServices;
+using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Logging;
+using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace InventoryApp.Pages
 {
-    public partial class Index
+    public partial class Index : IDisposable
     {
         private List<CarouselItem> items;
         [Inject] private IWebHostEnvironment WebHostEnvironment { get; set; }
         [Inject] private ILogger<Index> Logger { get; set; }
-
+        [Inject] public IndexRefreshService IndexRefreshService { get; set; }
 
 
         protected override async Task OnInitializedAsync()
         {
             await Task.Delay(0);
-
+            IndexRefreshService.OnRefreshRequested += PageRefreshHandler;
             items = new List<CarouselItem>();
             CarouselItems();
         }
@@ -70,5 +56,9 @@ namespace InventoryApp.Pages
             Logger.LogInformation("Carousel file read completed!");
         }
 
+        public void Dispose()
+        {
+            IndexRefreshService.OnRefreshRequested -= PageRefreshHandler;
+        }
     }
 }
