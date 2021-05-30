@@ -72,7 +72,7 @@ namespace InventoryApp.Pages
                             await LoadData(PagingParameter.CurrentPage, null);
                     }
 
-                    if (model.Issue != null)
+                    if (model.Issue != null && property== "create/issue")
                     {
                         var stock = stocks.Find(x => x.Id == model.Issue.ProductId);
                         if (stock != null)
@@ -115,7 +115,7 @@ namespace InventoryApp.Pages
                     }
 
                     //Purchase Entry Cancel
-                    if (model.Receive !=null && property.Equals("cancel"))
+                    if (model.Receive != null && property.Equals("cancel"))
                     {
                         var stock = stocks.Find(x => x.Id == model.Receive.ProductId);
                         if (stock != null)
@@ -127,6 +127,22 @@ namespace InventoryApp.Pages
                         }
                         else
                             await LoadData(PagingParameter.CurrentPage, null);
+                    }
+
+                    //Sale entry cancel
+                    if (model.Issue !=null && property.Equals("cancel"))
+                    {
+                        var stock = stocks.Find(x=>x.Id == model.Issue.ProductId);
+
+                        if (stock != null)
+                        {
+                            stock.TotalIssue -= model.Issue.Quantity;
+                            stock.InStock += model.Issue.Quantity;
+
+                            UpdateStock(model.Issue.ProductId, stock);
+                        }
+                        else
+                            await LoadData(PagingParameter.CurrentPage,null);
                     }
                 }
 

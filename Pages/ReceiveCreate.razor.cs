@@ -47,7 +47,6 @@ namespace InventoryApp.Pages
         public ILogger<ReceiveCreate> Logger { get; set; }
 
 
-
         Product ProductSelection
         {
             get => receive.Product;
@@ -175,7 +174,7 @@ namespace InventoryApp.Pages
                     //Stock
                     var stock = await StockService.GetByIdAsync(receive.ProductId);
 
-                    //Purchase Return
+                    //Sreate Purchase Return
                     var purchaseReturn = new PurchaseReturn
                     {
                         ProductId = receive.ProductId,
@@ -185,7 +184,6 @@ namespace InventoryApp.Pages
                         PurchaseId = receive.Id,
                     };
 
-                    //Create Purchase return
                     await PurchaseReturnService.CreateAsync(purchaseReturn);
                     Logger.LogInformation("Purchase retrun inserted");
 
@@ -214,9 +212,7 @@ namespace InventoryApp.Pages
                     Logger.LogInformation("Purchase Return task completed!");
 
                     UpdateService.UpdatePage(entity: new UpdateModel { PurchaseReturn = purchaseReturn });
-
                     AlertService.AddMessage(new Alert($"{receive.Product.Name} add to purchase return list", AlertType.Success));
-
                     NavigationManager.NavigateTo("/receive/index", false);
                 }
                 else
@@ -246,13 +242,13 @@ namespace InventoryApp.Pages
 
                     await ReceiveService.CreateAsync(receive);
 
+                    //Manage stock by this method
                     await StockService.ReceiveItem(receive);
 
                     Logger.LogInformation("Item received and updated stock!");
 
                     //Refresh page list
                     UpdateService.UpdatePage("create", new UpdateModel { Receive = receive });
-
                     AlertService.AddMessage(new Alert(receive.Product.Name + AlertMessage.AddInfo, AlertType.Success));
 
                     receive = new Receive();

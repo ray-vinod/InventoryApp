@@ -55,10 +55,11 @@ namespace InventoryApp.Services
                 stock.TotalReceive += receive.Quantity;
                 stock.InStock = (stock.TotalReceive - stock.TotalReceiveReturn) - (stock.TotalIssue - stock.TotalIssueReturn);
                 Context.Stocks.Update(stock);
-                Console.WriteLine("Message : ==> Stock updated!");
+                Console.WriteLine("Message : ==> Item updated in stock!");
             }
             else
             {
+                //New stock item
                 stock = new Stock
                 {
                     Id = receive.ProductId,
@@ -70,7 +71,7 @@ namespace InventoryApp.Services
                 };
 
                 Context.Stocks.Add(stock);
-                Console.WriteLine("Message : ==> Stock Added!");
+                Console.WriteLine("Message : ==> Item added to the stock!");
             }
 
             await Context.SaveChangesAsync();
