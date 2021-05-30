@@ -33,7 +33,6 @@ namespace InventoryApp.Pages
 
 
 
-
         protected override async Task OnInitializedAsync()
         {
             saleReturnsvm = new List<SaleReturnViewModel>();
@@ -50,9 +49,9 @@ namespace InventoryApp.Pages
                 if (model != null && model.SaleReturn != null)
                 {
                     await LoadData(PagingParameter.CurrentPage, null);
-                }
 
-                StateHasChanged();
+                    StateHasChanged();
+                }
             });
         }
 

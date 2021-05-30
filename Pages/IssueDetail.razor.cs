@@ -62,9 +62,9 @@ namespace InventoryApp.Pages
         {
             var parameters = new ModalParameters();
 
-            parameters.Add(nameof(DeleteConfirmModal.Message), $"{issue.Product.Prefix?.Name } " +
-                                                    $"{issue.Product.Name}" +
-                                                    $"{issue.Product.Suffix?.Name}");
+            parameters.Add(nameof(DeleteConfirmModal.Message),
+                $"{issue.Product.Prefix?.Name } {issue.Product.Name} {issue.Product.Suffix?.Name}");
+
             parameters.Add(nameof(DeleteConfirmModal.ShowInput), true);
 
             var options = new ModalOptions
@@ -84,12 +84,12 @@ namespace InventoryApp.Pages
 
                 if (isUpdateEntity != null)
                 {
+                    UpdateService.UpdatePage(property: "toCancel");
                     Logger.LogInformation("{0} request for cancel requested", issue.Product.Name);
 
                     AlertService.AddMessage(new Alert("Request for cancel entry has been sent!",
                         AlertType.Info));
 
-                    UpdateService.UpdatePage(entity: new UpdateModel { Issue = isUpdateEntity });
 
                     NavigationManager.NavigateTo("/issue/index", false);
                 }

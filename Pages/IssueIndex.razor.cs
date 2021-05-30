@@ -1,4 +1,3 @@
-using Blazored.Modal.Services;
 using InventoryApp.Helpers;
 using InventoryApp.Models;
 using InventoryApp.Models.Enums;
@@ -59,7 +58,7 @@ namespace InventoryApp.Pages
         {
             await InvokeAsync(async () =>
             {
-                if (model != null)
+                if (property == null && model != null)
                 {
                     if (model.Prefix != null)
                         NavigationManager.NavigateTo("/issue/index", true);
@@ -67,19 +66,29 @@ namespace InventoryApp.Pages
                     if (model.Suffix != null)
                         NavigationManager.NavigateTo("/issue/index", true);
 
-                    if (model.Issue != null)
-                        await LoadData(PagingParameter.CurrentPage, null);
-                }
-                else
-                {
-                    if (property != null)
+                    if (model.Issue != null && property == null)
                     {
-                        foreach (var load in property.Split(new char[] { ',' },
-                            StringSplitOptions.RemoveEmptyEntries))
-                        {
-                            if (load == "issue/index")
-                                await LoadData(PagingParameter.CurrentPage, null);
-                        }
+                        int index = issuevm.FindIndex(x=>x.Id == model.Issue.Id);
+                        issuevm.RemoveAt(index);
+                        issuevm.Insert(index,model.Issue);
+                    }
+
+                    if (model.SaleReturn != null)
+                        NavigationManager.NavigateTo("/issue/index",true);  //Hard reload/refresh page
+
+                }
+
+                //On record created
+                if (property != null)
+                {
+                    foreach (var load in property.Split(new char[] { ',' },
+                        StringSplitOptions.RemoveEmptyEntries))
+                    {
+                        if (load == "create/issue")
+                            await LoadData(PagingParameter.CurrentPage, null);
+
+                        if (load == "cancel")
+                            NavigationManager.NavigateTo("/issue/index",true);
                     }
                 }
 
@@ -129,7 +138,7 @@ namespace InventoryApp.Pages
             string searchText = e.Value.ToString().ToUpper();
             await LoadData(PagingParameter.CurrentPage, searchText);
         }
-
+        
         private async Task CallData(int page, string searchText)
         {
             isLock = true;
