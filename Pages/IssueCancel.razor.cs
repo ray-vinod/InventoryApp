@@ -73,10 +73,17 @@ namespace InventoryApp.Pages
         {
             await InvokeAsync(async () =>
             {
-                if (model != null && model.Issue != null && model.Issue.Note != null)
+                if (property != null)
                 {
-                    await LoadData(PagingParameter.CurrentPage);
-                    StateHasChanged();
+                    foreach (var load in property.Split(new char[] { ',' },
+                        StringSplitOptions.RemoveEmptyEntries))
+                    {
+                        if (load == "toCancel")
+                        {
+                            await LoadData(PagingParameter.CurrentPage);
+                            StateHasChanged();
+                        }
+                    }
                 }
             });
         }
@@ -203,9 +210,10 @@ namespace InventoryApp.Pages
                 if (updatedStock != null)
                 {
                     await LoadData(PagingParameter.CurrentPage);
-                    UpdateService.UpdatePage();
-                    AlertService.AddMessage(new Alert($"{updatedStock.Product.Name} removed successfully!",
-                        AlertType.Info));
+                    UpdateService.UpdatePage(property: "cancel", new UpdateModel { Issue = issue });
+                    AlertService.AddMessage(new Alert($"{updatedStock.Product.Name} removed successfully!", AlertType.Info));
+
+                    await LoadData(PagingParameter.CurrentPage);
                 }
             }
         }
@@ -218,7 +226,7 @@ namespace InventoryApp.Pages
             await foreach (var issue in IssueService.StreamListAsync(
                 page,
                 PagingParameter.PageSize,
-                filter: x => x.Note != null,
+                filter: x => x.IsDelete != true && x.Note != null && x.IsUse != true,
                 orderBy: o => o.OrderByDescending(x => x.IssueDate)
                     .ThenBy(x => x.Product.Name),
                 includeProperties: "Product,Product.Prefix,Product.Suffix"))
@@ -248,10 +256,16 @@ namespace InventoryApp.Pages
 
             var item = await IssueService.GetByIdAsync(id);
             item.Note = null;
-            await IssueService.UpdateAsync(item);
+            var result = await IssueService.UpdateAsync(item);
 
-            AlertService.AddMessage(new Alert("Task completed successfully!", AlertType.Info));
-            await LoadData(PagingParameter.CurrentPage);
+            if (result != null)
+            {
+                Logger.LogInformation("Task completed!");
+                AlertService.AddMessage(new Alert("Task completed successfully!", AlertType.Info));
+                await LoadData(PagingParameter.CurrentPage);
+
+                UpdateService.UpdatePage(property: "cancel");
+            }
         }
 
         public void Dispose()

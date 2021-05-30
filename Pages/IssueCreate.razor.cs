@@ -199,6 +199,12 @@ namespace InventoryApp.Pages
                     return;
                 }
 
+                if (avQty == 0)
+                {
+                    AlertService.AddMessage(new Alert("Item not available in stock!", AlertType.Warning));
+                    return;
+                }
+
                 issue.Remarks = issue.Remarks.ToUpper();
                 issue.ProductId = issue.Product.Id;
                 issue.Product = null;
@@ -213,7 +219,7 @@ namespace InventoryApp.Pages
                     AlertService.AddMessage(new Alert(msg + AlertMessage.AddInfo, AlertType.Info));
 
                     issue.Quantity = qty;
-                    UpdateService.UpdatePage(property: "issue/index", entity: new UpdateModel { Issue = issue });
+                    UpdateService.UpdatePage(property: "create/issue", entity: new UpdateModel { Issue = issue });
 
                     //Reset Form
                     IsDisable = false;

@@ -148,12 +148,12 @@ namespace InventoryApp.Pages
                 }
                 else
                 {
-                    //Stock manage
-                    int qty = receive.Quantity - receive.UseQuantity;
-                    stock.TotalReceive -= qty;
-                    stock.InStock -= qty;
+                    //To manage stock
+                    //int qty = receive.Quantity - receive.UseQuantity;
+                    stock.TotalReceive -= rQty;
+                    stock.InStock -= rQty;
 
-                    //Create New Receive Item for delete in split row in talble for used quantity
+                    //Create New Receive Item for deletion of available quentity in slipt manner
                     var newReceive = new Receive
                     {
                         ProductId = receive.ProductId,
@@ -161,7 +161,7 @@ namespace InventoryApp.Pages
                         ExpiryDate = receive.ExpiryDate,
                         ReceiveDate = receive.ReceiveDate,
                         ReceiveBy = receive.ReceiveBy,
-                        Quantity = qty,
+                        Quantity = rQty,
                         Batch = receive.Batch,
                         IsDelete = true,
                         Note = receive.Note,
@@ -170,7 +170,7 @@ namespace InventoryApp.Pages
 
                     await ReceiveService.CreateAsync(newReceive);
 
-                    //receive manage
+                    //receive manage for old entry
                     receive.Note = null;
                     receive.Quantity = receive.UseQuantity;
                     receive.UseQuantity = 0;

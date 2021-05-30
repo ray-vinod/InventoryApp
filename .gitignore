@@ -13,6 +13,7 @@
 obj/
 *.bin
 .suo
+*.sql
 
 
 # User-specific files (MonoDevelop/Xamarin Studio)
